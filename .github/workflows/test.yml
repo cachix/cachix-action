@@ -1,0 +1,22 @@
+name: "Test cachix-action"
+on:
+  pull_request:
+  push:
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, macos]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v1
+    - run: yarn install --frozen-lockfile
+    - run: yarn build
+    - run: yarn test
+    - name: Install Nix
+      run: curl https://nixos.org/nix/install | sh
+    - name: Build
+      uses: ./
+      with:
+        cachixPush: cachix-action

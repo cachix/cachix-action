@@ -1,0 +1,35 @@
+{
+  "name": "cachix-action",
+  "version": "1.0.0",
+  "private": true,
+  "description": "nix-build with the help of caching to Cachix",
+  "main": "lib/main.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cachix/cachix-action.git"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "author": "HerculesLabs",
+  "license": "ASL2",
+  "dependencies": {
+    "@actions/core": "^1.1.0",
+    "@actions/exec": "^1.0.1"
+  },
+  "devDependencies": {
+    "ts-node": "^8.4.1",
+    "@types/jest": "^24.0.13",
+    "@types/node": "^12.0.4",
+    "jest": "^24.8.0",
+    "jest-circus": "^24.7.1",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.1"
+  }
+}
