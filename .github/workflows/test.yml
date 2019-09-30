@@ -14,9 +14,9 @@ jobs:
     - run: yarn install --frozen-lockfile
     - run: yarn build
     - run: yarn test
-    - name: Install Nix
-      run: curl https://nixos.org/nix/install | sh
-    - name: Build
+    - name: Install & Build
       uses: ./
       with:
         cachixPush: cachix-action
+        file: test.nix
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'

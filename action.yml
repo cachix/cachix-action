@@ -9,6 +9,9 @@ inputs:
   cachixPush:
     description: 'Names of cachix caches to push (and pull/substitute)'
     required: true
+  signingKey:
+    description: 'Signing key secret retrieved after creating binary cache on https://cachix.org'
+    required: true
 branding:
   color: 'blue'
   icon: 'database'

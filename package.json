@@ -21,7 +21,8 @@
   "license": "ASL2",
   "dependencies": {
     "@actions/core": "^1.1.0",
-    "@actions/exec": "^1.0.1"
+    "@actions/exec": "^1.0.1",
+    "@actions/tool-cache": "^1.1.2"
   },
   "devDependencies": {
     "ts-node": "^8.4.1",
