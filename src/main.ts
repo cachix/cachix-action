@@ -3,7 +3,7 @@ import * as exec from '@actions/exec';
 import * as tc from '@actions/tool-cache';
 import {homedir} from 'os';
 import {existsSync} from 'fs';
-import {extrasperse} from './utils';
+import {extrasperse, saneSplit} from './utils';
 
 async function run() {
   try {
@@ -50,12 +50,12 @@ async function run() {
         },
       }
     };
-    const args = extrasperse('-A', attributes.split(/\s/)).concat([file || "default.nix"]);
+    const args = extrasperse('-A', saneSplit(attributes, /\s/)).concat([file || "default.nix"]);
     await exec.exec('nix-build', args, options);
     core.endGroup()
 
     core.startGroup(`Pushing to Cachix ` + cachixPush);
-    await exec.exec('cachix', ['push', cachixPush].concat(paths.split(/\s/).join(' ')));
+    await exec.exec('cachix', ['push', cachixPush].concat(saneSplit(paths, /\s/).join(' ')));
     core.endGroup()
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
