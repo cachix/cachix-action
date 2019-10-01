@@ -33,10 +33,20 @@ async function run() {
     }
 
     core.startGroup('Installing Cachix')
-    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
+    // TODO: use cachix 0.3.4 once released
+    //await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
+    await exec.exec(
+      'nix-env',
+      [ '-if'
+      , 'https://github.com/cachix/cachix/tarball/empty-stdin'
+      , '--substituters'
+      , 'https://cachix.cachix.org'
+      , '--trusted-public-keys'
+      , 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM='
+      ])
     core.endGroup()
 
-    core.startGroup(`Using Cachix ` + cachixPush);
+    core.startGroup(`Cachix: using ` + cachixPush);
     await exec.exec('cachix', ['use', cachixPush]);
     core.endGroup()
 
@@ -56,7 +66,7 @@ async function run() {
     await exec.exec('nix-build', args, options);
     core.endGroup()
 
-    core.startGroup(`Pushing to Cachix ` + cachixPush);
+    core.startGroup(`Cachix: pushing to ` + cachixPush);
     await exec.exec('cachix', ['push', cachixPush].concat(saneSplit(paths, /\s/).join(' ')));
     core.endGroup()
   } catch (error) {
