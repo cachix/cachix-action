@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as tc from '@actions/tool-cache';
-import {homedir} from 'os';
+import {homedir, userInfo} from 'os';
 import {existsSync} from 'fs';
 import {extrasperse, saneSplit} from './utils';
 
@@ -15,6 +15,7 @@ async function run() {
 
     // rest of the constants
     const home = homedir();
+    const {username} = userInfo();
     const PATH = process.env.PATH;  
     const CERTS_PATH = home + '/.nix-profile/etc/ssl/certs/ca-bundle.crt';
 
@@ -23,6 +24,7 @@ async function run() {
     const nixInstall = await tc.downloadTool('https://nixos.org/nix/install');
     await exec.exec("sh", [nixInstall]);
     core.exportVariable('PATH', `${PATH}:${home}/.nix-profile/bin`)
+    core.exportVariable('NIX_PATH', `/nix/var/nix/profiles/per-user/${username}/channels`)
     core.endGroup()
 
     // macOS needs certificates hints
