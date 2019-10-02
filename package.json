@@ -17,7 +17,7 @@
     "node",
     "setup"
   ],
-  "author": "HerculesLabs",
+  "author": "Domen Kožar",
   "license": "ASL2",
   "dependencies": {
     "@actions/core": "^1.1.0",

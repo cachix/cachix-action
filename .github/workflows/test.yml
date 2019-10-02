@@ -1,4 +1,4 @@
-name: "Test cachix-action"
+name: "nix-cachix test"
 on:
   pull_request:
   push:
@@ -14,6 +14,7 @@ jobs:
     - run: yarn install --frozen-lockfile
     - run: yarn build
     - run: yarn test
+    - uses: cachix/install-nix-action@v1
     - name: Install & Build
       uses: ./
       with:
