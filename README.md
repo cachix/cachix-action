@@ -10,7 +10,7 @@ Build software only once using [Nix](https://nixos.org/nix/) with the help of [C
 
 2. As an admin of your github repository:
     1. Click on Settings
-    2. Secrets
+    2. Click on Secrets [If missing, you need to sign up first for actions beta](https://github.com/features/actions)
     3. Add your signing key value under name `CACHIX_SIGNING_KEY`.
 
 3. Create `.github/workflows/test.yml` in your repo with the following contents:
