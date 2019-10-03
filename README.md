@@ -30,7 +30,7 @@ jobs:
       with:
         push: cachix-action
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        // Only needed for private caches
+        # Only needed for private caches
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 ```
 
