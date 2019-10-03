@@ -7,16 +7,22 @@ async function run() {
     // inputs
     const file = core.getInput('file');
     const attributes = core.getInput('attributes');
-    const cachixPush = core.getInput('cachixPush', { required: true });
+    const push = core.getInput('push', { required: true });
     const signingKey = core.getInput('signingKey', { required: true });
+    const authToken = core.getInput('authToken')
 
     core.startGroup('Installing Cachix')
     // TODO: use cachix official installation link
-    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://github.com/NixOS/nixpkgs/tarball/660db64a261bc583c909e82a0c553c4b1e07b655']);
+    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://github.com/NixOS/nixpkgs/tarball/ab5863afada3c1b50fc43bf774b75ea71b287cde']);
     core.endGroup()
 
-    core.startGroup(`Cachix: using ` + cachixPush);
-    await exec.exec('cachix', ['use', cachixPush]);
+    // for private caches
+    if (authToken !== "") {
+      await exec.exec('cachix', ['authtoken', authToken]);
+    }
+
+    core.startGroup(`Cachix: using ` + push);
+    await exec.exec('cachix', ['use', push]);
     core.endGroup()
 
     core.exportVariable('CACHIX_SIGNING_KEY', signingKey)
@@ -35,8 +41,8 @@ async function run() {
     await exec.exec('nix-build', args, options);
     core.endGroup()
 
-    core.startGroup(`Cachix: pushing to ` + cachixPush);
-    await exec.exec('cachix', ['push', cachixPush].concat(saneSplit(paths, /\s/).join(' ')));
+    core.startGroup(`Cachix: pushing to ` + push);
+    await exec.exec('cachix', ['push', push].concat(saneSplit(paths, /\s/).join(' ')));
     core.endGroup()
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);

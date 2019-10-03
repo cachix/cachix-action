@@ -15,9 +15,16 @@ jobs:
     - run: yarn build
     - run: yarn test
     - uses: cachix/install-nix-action@v2
-    - name: Install & Build
+    - name: Test public cache
       uses: ./
       with:
-        cachixPush: cachix-action
+        push: cachix-action
         file: test.nix
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+    - name: Test private cache
+      uses: ./
+      with:
+        push: cachix-action-private
+        file: test.nix
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}'
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
