@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import {extrasperse, saneSplit} from './utils';
+import {extrasperse, saneSplit} from './strings';
 
 async function run() {
   try {

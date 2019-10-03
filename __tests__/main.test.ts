@@ -1,4 +1,4 @@
-import {extrasperse, saneSplit} from '../src/utils'
+import {extrasperse, saneSplit} from '../src/strings'
 
 test('extrasperse', async() => {
     expect(extrasperse('-A', ["foo", "bar"])).toEqual(["-A", "foo", "-A", "bar"]);
