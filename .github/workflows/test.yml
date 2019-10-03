@@ -1,4 +1,4 @@
-name: "nix-cachix test"
+name: "cachix-action test"
 on:
   pull_request:
   push:
