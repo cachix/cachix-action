@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: cachix/install-nix-action@v1
+    - uses: cachix/install-nix-action@v2
     - uses: cachix/cachix-action@v1
       with:
         push: cachix-action
