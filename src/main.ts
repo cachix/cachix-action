@@ -12,7 +12,7 @@ async function run() {
 
     core.startGroup('Installing Cachix')
     // TODO: use cachix official installation link
-    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://github.com/NixOS/nixpkgs/tarball/660db64a261bc583c909e82a0c553c4b1e07b655']);
+    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://github.com/NixOS/nixpkgs/tarball/ab5863afada3c1b50fc43bf774b75ea71b287cde']);
     core.endGroup()
 
     core.startGroup(`Cachix: using ` + cachixPush);
