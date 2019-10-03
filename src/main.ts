@@ -8,7 +8,7 @@ async function run() {
     const file = core.getInput('file');
     const attributes = core.getInput('attributes');
     const name = core.getInput('name', { required: true });
-    const signingKey = core.getInput('signingKey', { required: true });
+    const signingKey = core.getInput('signingKey');
     const authToken = core.getInput('authToken')
 
     core.startGroup('Installing Cachix')
@@ -25,7 +25,9 @@ async function run() {
     await exec.exec('cachix', ['use', name]);
     core.endGroup()
 
-    core.exportVariable('CACHIX_SIGNING_KEY', signingKey)
+    if (signingKey !== "") {
+      core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
+    }
     // TODO: cachix use --watch-store
 
     core.startGroup(`Invoking nix-build`);
@@ -41,9 +43,14 @@ async function run() {
     await exec.exec('nix-build', args, options);
     core.endGroup()
 
-    core.startGroup(`Cachix: pushing to ` + name);
-    await exec.exec('cachix', ['push', name].concat(nonEmptySplit(paths, /\s+/)));
-    core.endGroup()
+    // Needed for PRs
+    if (signingKey !== "") {
+      core.startGroup(`Cachix: pushing to ` + name);
+      await exec.exec('cachix', ['push', name].concat(nonEmptySplit(paths, /\s+/)));
+      core.endGroup()
+    } else {
+      console.log("No signing key. Assuming it's a pull request, nothing will be pushed.");
+    }
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
     throw(error);
