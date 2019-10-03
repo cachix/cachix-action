@@ -1,13 +1,13 @@
-import {extrasperse, saneSplit} from '../src/strings'
+import {prependEach, nonEmptySplit} from '../src/strings'
 
-test('extrasperse', async() => {
-    expect(extrasperse('-A', ["foo", "bar"])).toEqual(["-A", "foo", "-A", "bar"]);
-    expect(extrasperse('-A', [])).toEqual([]);
+test('prependEach', async() => {
+    expect(prependEach('-A', ["foo", "bar"])).toEqual(["-A", "foo", "-A", "bar"]);
+    expect(prependEach('-A', [])).toEqual([]);
 });
 
-test('saneSplit', async() => {
-    expect(saneSplit("", /\s+/)).toEqual([]);
-    expect(saneSplit("foo bar", /\s+/)).toEqual(["foo", "bar"]);
+test('nonEmptySplit', async() => {
+    expect(nonEmptySplit("", /\s+/)).toEqual([]);
+    expect(nonEmptySplit("foo bar", /\s+/)).toEqual(["foo", "bar"]);
 })
 
 // TODO: hopefully github actions will support integration tests

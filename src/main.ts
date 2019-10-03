@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
-import {extrasperse, saneSplit} from './strings';
+import {prependEach, nonEmptySplit} from './strings';
 
 async function run() {
   try {
@@ -37,12 +37,12 @@ async function run() {
         },
       }
     };
-    const args = extrasperse('-A', saneSplit(attributes, /\s/)).concat([file || "default.nix"]);
+    const args = prependEach('-A', nonEmptySplit(attributes, /\s/)).concat([file || "default.nix"]);
     await exec.exec('nix-build', args, options);
     core.endGroup()
 
     core.startGroup(`Cachix: pushing to ` + push);
-    await exec.exec('cachix', ['push', push].concat(saneSplit(paths, /\s/).join(' ')));
+    await exec.exec('cachix', ['push', push].concat(nonEmptySplit(paths, /\s/).join(' ')));
     core.endGroup()
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
