@@ -34,6 +34,8 @@ jobs:
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 ```
 
+See [action.yml](action.yml) for all options.
+
 ---
 
 ## Hacking
