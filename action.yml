@@ -3,12 +3,14 @@ description: 'nix-build with the help of caching to Cachix'
 author: 'Domen Kožar'
 inputs:
   file:
-    description: 'What Nix file to build. Defaults to (in order): nix/ci.nix or ci.nix or release.nix or default.nix'
+    description: 'Nix file to build. Defaults to default.nix'
   attributes:
-    description: 'Attributes to build. By default, all attributes are built.'
-  cachixPush:
+    description: 'Nix attributes to nix-build. By default, all attributes are built.'
+  push:
     description: 'Names of cachix caches to push (and pull/substitute)'
     required: true
+  authToken:
+    description: 'Authentication token for Cachix, needed only for private cache access'
   signingKey:
     description: 'Signing key secret retrieved after creating binary cache on https://cachix.org'
     required: true
