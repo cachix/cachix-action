@@ -37,12 +37,12 @@ async function run() {
         },
       }
     };
-    const args = prependEach('-A', nonEmptySplit(attributes, /\s/)).concat([file || "default.nix"]);
+    const args = prependEach('-A', nonEmptySplit(attributes, /\s+/)).concat([file || "default.nix"]);
     await exec.exec('nix-build', args, options);
     core.endGroup()
 
     core.startGroup(`Cachix: pushing to ` + name);
-    await exec.exec('cachix', ['push', name].concat(nonEmptySplit(paths, /\s/).join(' ')));
+    await exec.exec('cachix', ['push', name].concat(nonEmptySplit(paths, /\s+/)));
     core.endGroup()
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
