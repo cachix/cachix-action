@@ -49,7 +49,7 @@ async function run() {
       await exec.exec('cachix', ['push', name].concat(nonEmptySplit(paths, /\s+/)));
       core.endGroup()
     } else {
-      console.log("No signing key. Assuming it's a pull request and not pushing anything.");
+      console.log("No signing key. Assuming it's a pull request, nothing will be pushed.");
     }
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
