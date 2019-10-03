@@ -7,7 +7,7 @@ async function run() {
     // inputs
     const file = core.getInput('file');
     const attributes = core.getInput('attributes');
-    const push = core.getInput('push', { required: true });
+    const name = core.getInput('name', { required: true });
     const signingKey = core.getInput('signingKey', { required: true });
     const authToken = core.getInput('authToken')
 
@@ -21,8 +21,8 @@ async function run() {
       await exec.exec('cachix', ['authtoken', authToken]);
     }
 
-    core.startGroup(`Cachix: using ` + push);
-    await exec.exec('cachix', ['use', push]);
+    core.startGroup(`Cachix: using ` + name);
+    await exec.exec('cachix', ['use', name]);
     core.endGroup()
 
     core.exportVariable('CACHIX_SIGNING_KEY', signingKey)
@@ -41,8 +41,8 @@ async function run() {
     await exec.exec('nix-build', args, options);
     core.endGroup()
 
-    core.startGroup(`Cachix: pushing to ` + push);
-    await exec.exec('cachix', ['push', push].concat(nonEmptySplit(paths, /\s/).join(' ')));
+    core.startGroup(`Cachix: pushing to ` + name);
+    await exec.exec('cachix', ['push', name].concat(nonEmptySplit(paths, /\s/).join(' ')));
     core.endGroup()
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);

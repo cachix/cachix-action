@@ -6,8 +6,8 @@ inputs:
     description: 'Nix file to build. Defaults to default.nix'
   attributes:
     description: 'Nix attributes to nix-build. By default, all attributes are built.'
-  push:
-    description: 'Names of cachix caches to push (and pull/substitute)'
+  name:
+    description: 'Name of a cachix cache to push and pull/substitute'
     required: true
   authToken:
     description: 'Authentication token for Cachix, needed only for private cache access'

@@ -28,7 +28,7 @@ jobs:
     - uses: cachix/install-nix-action@v2
     - uses: cachix/cachix-action@v1
       with:
-        push: cachix-action
+        name: cachix-action
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
         # Only needed for private caches
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
