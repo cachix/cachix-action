@@ -11,17 +11,8 @@ async function run() {
     const signingKey = core.getInput('signingKey', { required: true });
 
     core.startGroup('Installing Cachix')
-    // TODO: use cachix 0.3.4 once released
-    //await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
-    await exec.exec(
-      'nix-env',
-      [ '-if'
-      , 'https://github.com/cachix/cachix/tarball/empty-stdin'
-      , '--substituters'
-      , 'https://cachix.cachix.org'
-      , '--trusted-public-keys'
-      , 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM='
-      ])
+    // TODO: use cachix official installation link
+    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://github.com/NixOS/nixpkgs/tarball/660db64a261bc583c909e82a0c553c4b1e07b655']);
     core.endGroup()
 
     core.startGroup(`Cachix: using ` + cachixPush);
