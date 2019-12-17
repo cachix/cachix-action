@@ -4,9 +4,31 @@
 
 Build software only once using [Nix](https://nixos.org/nix/) with the help of [Cachix](https://cachix.org).
 
+This action will configure Cachix and invoke `nix-build`.
+
+## Why do I need this
+
+Because you'd like for your CI to be fast. Let me explain.
+
+Caching on a typical CI doesn't work in favor of Nix.
+
+`/nix/store` is a global storage of everything Nix operates on. These are
+your sources, patches, tarballs, packages, configuration.
+
+Caching `/nix/store` is time consuming as Nix only appends store paths to it.
+As you invoke new builds, those will contain all your sources throughout the whole history of your build.
+
+Garbage collecting is also suboptimal, as caching is hard to invalidate correctly
+between different changes and branches.
+
+Cachix avoids this by keeping your `/nix/store` hosted and only downloads the bits you
+need for the given build (in parallel) using Nix substituters.
+
 ## Usage
 
-1. [Login to Cachix](https://cachix.org/api/v1/login) and create a new cache. Backup the signing key in the process.
+1. [Login to Cachix](https://cachix.org/api/v1/login) and create a new cache.
+    1. Follow getting started to create your signing key
+    2. Backup the signing key in the process.
 
 2. As an admin of your github repository:
     1. Click on Settings
