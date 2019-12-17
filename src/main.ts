@@ -12,8 +12,7 @@ async function run() {
     const authToken = core.getInput('authToken')
 
     core.startGroup('Installing Cachix')
-    // TODO: use cachix official installation link
-    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://github.com/NixOS/nixpkgs/tarball/ab5863afada3c1b50fc43bf774b75ea71b287cde']);
+    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
     core.endGroup()
 
     // for private caches
