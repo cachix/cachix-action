@@ -56,6 +56,19 @@ jobs:
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 ```
 
+Alternatively, you can use this action to only configure cachix for substitution:
+
+```yaml
+...
+    - uses: cachix/cachix-action@v2
+      with:
+        name: mycache
+        skipNixBuild: true
+        # Only needed for private caches
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+...
+```
+
 See [action.yml](action.yml) for all options.
 
 ---
