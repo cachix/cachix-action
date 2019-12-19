@@ -4,9 +4,28 @@
 
 Build software only once using [Nix](https://nixos.org/nix/) with the help of [Cachix](https://cachix.org).
 
+This action will configure Cachix and invoke `nix-build`.
+
+## Why do I need this
+
+Because you'd like for your CI to be fast. Let me explain.
+
+Directory-based caching on a typical CI doesn't work well for Nix.
+
+`/nix/store` is a global storage of everything Nix operates on. These are
+your sources, patches, tarballs, packages, configuration.
+
+A directory-based cache requires downloading a whole store, including the irrelevant parts. `cachix-action` will only fetch what's needed by configuring a Nix binary cache.
+
+When the build is done, cachix-action only has to upload the new store paths, rather than syncing the whole store.
+
+Purging paths from a directory-based cache is not feasible because it'd have to be aware of all branches and their respective contents somehow.
+
 ## Usage
 
-1. [Login to Cachix](https://cachix.org/api/v1/login) and create a new cache. Backup the signing key in the process.
+1. [Login to Cachix](https://cachix.org/api/v1/login) and create a new cache.
+    1. Follow getting started to create your signing key
+    2. Backup the signing key in the process.
 
 2. As an admin of your github repository:
     1. Click on Settings
@@ -32,6 +51,19 @@ jobs:
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
         # Only needed for private caches
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+```
+
+Alternatively, you can use this action to only configure cachix for substitution:
+
+```yaml
+...
+    - uses: cachix/cachix-action@v2
+      with:
+        name: mycache
+        skipNixBuild: true
+        # Only needed for private caches
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+...
 ```
 
 See [action.yml](action.yml) for all options.
