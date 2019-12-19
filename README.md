@@ -10,7 +10,7 @@ This action will configure Cachix and invoke `nix-build`.
 
 Because you'd like for your CI to be fast. Let me explain.
 
-Caching on a typical CI doesn't work in favor of Nix.
+Directory-based caching on a typical CI doesn't work well for Nix.
 
 `/nix/store` is a global storage of everything Nix operates on. These are
 your sources, patches, tarballs, packages, configuration.
