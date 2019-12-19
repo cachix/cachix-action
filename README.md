@@ -15,14 +15,11 @@ Directory-based caching on a typical CI doesn't work well for Nix.
 `/nix/store` is a global storage of everything Nix operates on. These are
 your sources, patches, tarballs, packages, configuration.
 
-Caching `/nix/store` is time consuming as Nix only appends store paths to it.
-As you invoke new builds, those will contain all your sources throughout the whole history of your build.
+A directory-based cache requires that downloading a whole store, including the irrelevant parts. cachix-action will only fetch what's needed by configuring a Nix binary cache.
 
-Garbage collecting is also suboptimal, as caching is hard to invalidate correctly
-between different changes and branches.
+When the build is done, cachix-action only has to upload the new store paths, rather than syncing the whole store.
 
-Cachix avoids this by keeping your `/nix/store` hosted and only downloads the bits you
-need for the given build (in parallel) using Nix substituters.
+Purging paths from a directory-based cache is not feasible because it'd have to be aware of all branches and their respective contents somehow.
 
 ## Usage
 
