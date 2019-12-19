@@ -15,7 +15,7 @@ Directory-based caching on a typical CI doesn't work well for Nix.
 `/nix/store` is a global storage of everything Nix operates on. These are
 your sources, patches, tarballs, packages, configuration.
 
-A directory-based cache requires that downloading a whole store, including the irrelevant parts. cachix-action will only fetch what's needed by configuring a Nix binary cache.
+A directory-based cache requires downloading a whole store, including the irrelevant parts. `cachix-action` will only fetch what's needed by configuring a Nix binary cache.
 
 When the build is done, cachix-action only has to upload the new store paths, rather than syncing the whole store.
 
