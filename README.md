@@ -45,7 +45,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: cachix/install-nix-action@v6
-    - uses: cachix/cachix-action@v2
+    - uses: cachix/cachix-action@v3
       with:
         name: mycache
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
@@ -57,7 +57,7 @@ Alternatively, you can use this action to only configure cachix for substitution
 
 ```yaml
 ...
-    - uses: cachix/cachix-action@v2
+    - uses: cachix/cachix-action@v3
       with:
         name: mycache
         skipNixBuild: true
