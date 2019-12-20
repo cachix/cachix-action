@@ -37,10 +37,14 @@ async function run() {
 
     if (signingKey !== "") {
       core.startGroup('Cachix: Configuring push');
+      // needed to discover auth token
       await exec.exec("sudo", ["sh", "-c", `echo export HOME=${home()} > /etc/nix/cachix-push.sh`]);
       await exec.exec("sudo", ["sh", "-c", `echo export CACHIX_SIGNING_KEY=${signingKey} >> /etc/nix/cachix-push.sh`]);
-      await exec.exec("sudo", ["sh", "-c", `echo ${cachixExecutable} push ${name} \$OUT_PATHS >> /etc/nix/cachix-push.sh`]);
+      // needed to for nix-store
+      await exec.exec("sudo", ["sh", "-c", `echo export PATH=\\$PATH:/nix/var/nix/profiles/default/bin:/nix/var/nix/profiles/per-user/runner/profile/bin >> /etc/nix/cachix-push.sh`]);
+      await exec.exec("sudo", ["sh", "-c", `echo ${cachixExecutable} push ${name} \\$OUT_PATHS >> /etc/nix/cachix-push.sh`]);
       await exec.exec("sudo", ["sh", "-c", `chmod +x /etc/nix/cachix-push.sh`]);
+      // enable post-build-hook
       await exec.exec("sudo", ["sh", "-c", `echo post-build-hook = /etc/nix/cachix-push.sh >> /etc/nix/nix.conf`]);
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
 
