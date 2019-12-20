@@ -48,12 +48,14 @@ async function run() {
       await exec.exec("sudo", ["sh", "-c", `echo post-build-hook = /etc/nix/cachix-push.sh >> /etc/nix/nix.conf`]);
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
 
+      // Ignore reloading failures as Nix might be installed in single-user mode (install-nix-action version 5 or lower)
+      const options = { ignoreReturnCode: true };
       // Reload nix-daemon
       if (type() == "Darwin") {
         // kickstart awaits nix-daemon to get up again
-        await exec.exec("sudo", ["launchctl", "kickstart", "-k", "system/org.nixos.nix-daemon"]);
+        await exec.exec("sudo", ["launchctl", "kickstart", "-k", "system/org.nixos.nix-daemon"], options);
       } else {
-        await exec.exec("sudo", ["pkill", "-HUP", "nix-daemon"]);
+        await exec.exec("sudo", ["pkill", "-HUP", "nix-daemon"], options);
       }
 
       core.endGroup();
