@@ -21,12 +21,17 @@ jobs:
         name: cachix-action
         file: test.nix
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-    - name: Test public cache no pushing
+    - name: Test public cache no signing key
       uses: ./
       with:
         name: cachix-action
         file: test.nix
         signingKey: ''
+    - name: Test public cache no pushing
+      uses: ./
+      with:
+        name: cachix-action
+        skipNixBuild: true
     - name: Test private cache
       uses: ./
       with:
