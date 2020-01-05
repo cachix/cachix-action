@@ -32,6 +32,13 @@ jobs:
       with:
         name: cachix-action
         skipNixBuild: true
+    - name: Test nixBuildArgs parameter
+      uses: ./
+      with:
+        name: cachix-action
+        file: test-with-arg.nix
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+        nixBuildArgs: --argstr arg foobar
     - name: Test private cache
       uses: ./
       with:
