@@ -23,16 +23,16 @@ Purging paths from a directory-based cache is not feasible because it'd have to 
 
 ## Usage
 
-1. [Login to Cachix](https://cachix.org/api/v1/login) and create a new cache.
+### 1. [Login to Cachix](https://cachix.org/api/v1/login) and create a new cache.
     1. Follow getting started to create your signing key
     2. Backup the signing key in the process.
 
-2. As an admin of your github repository:
+### 2. As an admin of your github repository:
     1. Click on Settings
     2. Click on Secrets ([If missing, you need to sign up first for actions beta](https://github.com/features/actions))
     3. Add your signing key value under name `CACHIX_SIGNING_KEY`.
 
-3. Create `.github/workflows/test.yml` in your repo with the following contents:
+### 3. Create `.github/workflows/test.yml` in your repo with the following contents:
 
 ```yaml
 name: "Test"
