@@ -31,26 +31,30 @@ async function run() {
 
     if (signingKey !== "") {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
-   
-      if (skipNixBuild !== 'true') {
-        core.startGroup(`Invoking nix-build`);
+    }
 
+    if (skipNixBuild !== 'true') {
+      core.startGroup(`Invoking nix-build`);
+ 
+      if (signingKey !== "") {
         // Remember existing store paths
         await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > store-path-pre-build`]);
+      }
 
-        let paths = '';
-        const options = {
-          listeners: {
-            stdout: (data: Buffer) => {
-              paths += data.toString();
-            },
-          }
-        };
-        const args = prependEach('-A', nonEmptySplit(attributes, /\s+/)).concat([file || "default.nix"]);
-        const additionalArgs = nonEmptySplit(nixBuildArgs, /\s+/);
-        await exec.exec('nix-build', additionalArgs.concat(args), options);
-        core.endGroup()
+      let paths = '';
+      const options = {
+        listeners: {
+          stdout: (data: Buffer) => {
+            paths += data.toString();
+          },
+        }
+      };
+      const args = prependEach('-A', nonEmptySplit(attributes, /\s+/)).concat([file || "default.nix"]);
+      const additionalArgs = nonEmptySplit(nixBuildArgs, /\s+/);
+      await exec.exec('nix-build', additionalArgs.concat(args), options);
+      core.endGroup()
 
+      if (signingKey !== "") {
         core.startGroup('Cachix: Pushing paths');
         await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' | cat - store-path-pre-build | sort | uniq -u  | ${cachixExecutable} push ${name}`]);
         core.endGroup();
