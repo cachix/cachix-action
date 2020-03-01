@@ -43,9 +43,9 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: cachix/install-nix-action@v6
-    - uses: cachix/cachix-action@v3
+    - uses: actions/checkout@v2
+    - uses: cachix/install-nix-action@v7
+    - uses: cachix/cachix-action@v5
       with:
         name: mycache
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
