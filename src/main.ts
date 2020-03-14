@@ -16,7 +16,7 @@ async function run() {
     const authToken = core.getInput('authToken')
     const cachixExecutable = "/nix/var/nix/profiles/per-user/runner/profile/bin/cachix";
 
-    core.startGroup('Installing Cachix')
+    core.startGroup('Cachix: installing')
     await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
     core.endGroup()
 
@@ -25,7 +25,7 @@ async function run() {
       await exec.exec(cachixExecutable, ['authtoken', authToken]);
     }
 
-    core.startGroup(`Cachix: using ` + name);
+    core.startGroup(`Cachix: using cache ` + name);
     await exec.exec('cachix', ['use', name]);
     core.endGroup();
 
@@ -34,7 +34,11 @@ async function run() {
     }
 
     if (skipNixBuild !== 'true') {
-      core.startGroup(`Invoking nix-build`);
+      const args = prependEach('-A', nonEmptySplit(attributes, /\s+/)).concat([file || "default.nix"]);
+      const additionalArgs = nonEmptySplit(nixBuildArgs, /\s+/);
+      const allArgs = additionalArgs.concat(args);
+
+      core.startGroup(`nix-build ${allArgs.join(' ')}`);
  
       if (signingKey !== "") {
         // Remember existing store paths
@@ -49,13 +53,11 @@ async function run() {
           },
         }
       };
-      const args = prependEach('-A', nonEmptySplit(attributes, /\s+/)).concat([file || "default.nix"]);
-      const additionalArgs = nonEmptySplit(nixBuildArgs, /\s+/);
-      await exec.exec('nix-build', additionalArgs.concat(args), options);
+      await exec.exec('nix-build', allArgs, options);
       core.endGroup()
 
       if (signingKey !== "") {
-        core.startGroup('Cachix: Pushing paths');
+        core.startGroup('Cachix: pushing paths');
         await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' | cat - store-path-pre-build | sort | uniq -u  | ${cachixExecutable} push ${name}`]);
         core.endGroup();
       }
