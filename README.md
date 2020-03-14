@@ -57,7 +57,7 @@ Alternatively, you can use this action to only configure cachix for substitution
 
 ```yaml
 ...
-    - uses: cachix/cachix-action@v3
+    - uses: cachix/cachix-action@v5
       with:
         name: mycache
         skipNixBuild: true
