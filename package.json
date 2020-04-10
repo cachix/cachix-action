@@ -21,16 +21,15 @@
   "license": "ASL2",
   "dependencies": {
     "@actions/core": "^1.1.0",
-    "@actions/exec": "^1.0.1",
-    "@actions/tool-cache": "^1.1.2"
+    "@actions/exec": "^1.0.1"
   },
   "devDependencies": {
-    "ts-node": "^8.4.1",
     "@types/jest": "^24.0.13",
     "@types/node": "^12.0.4",
     "jest": "^24.8.0",
     "jest-circus": "^24.7.1",
     "ts-jest": "^24.0.2",
+    "ts-node": "^8.4.1",
     "typescript": "^3.5.1"
   }
 }
