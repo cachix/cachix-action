@@ -6,7 +6,7 @@
   "main": "dist/main/index.js",
   "scripts": {
     "build": "tsc && ncc build -o dist/main src/main.ts",
-    "test": "jest"
+    "test": "echo NO TEST"
   },
   "repository": {
     "type": "git",

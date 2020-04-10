@@ -971,20 +971,18 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
+const coreCommand = __importStar(__webpack_require__(431));
 const exec = __importStar(__webpack_require__(986));
-const strings_1 = __webpack_require__(443);
-function run() {
+exports.IsPost = !!process.env['STATE_isPost'];
+// inputs
+const name = core.getInput('name', { required: true });
+const signingKey = core.getInput('signingKey');
+const authToken = core.getInput('authToken');
+const skipPush = core.getInput('skipPush');
+const cachixExecutable = '/nix/var/nix/profiles/per-user/runner/profile/bin/cachix';
+function setup() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // inputs
-            const name = core.getInput('name', { required: true });
-            const file = core.getInput('file');
-            const skipNixBuild = core.getInput('skipNixBuild');
-            const attributes = core.getInput('attributes');
-            const nixBuildArgs = core.getInput('nixBuildArgs');
-            const signingKey = core.getInput('signingKey');
-            const authToken = core.getInput('authToken');
-            const cachixExecutable = "/nix/var/nix/profiles/per-user/runner/profile/bin/cachix";
             core.startGroup('Cachix: installing');
             yield exec.exec('nix-env', ['--quiet', '-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
             core.endGroup();
@@ -997,31 +995,8 @@ function run() {
             core.endGroup();
             if (signingKey !== "") {
                 core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
-            }
-            if (skipNixBuild !== 'true') {
-                const args = strings_1.prependEach('-A', strings_1.nonEmptySplit(attributes, /\s+/)).concat([file || "default.nix"]);
-                const additionalArgs = strings_1.nonEmptySplit(nixBuildArgs, /\s+/);
-                const allArgs = additionalArgs.concat(args);
-                core.startGroup(`nix-build ${allArgs.join(' ')}`);
-                if (signingKey !== "") {
-                    // Remember existing store paths
-                    yield exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > store-path-pre-build`]);
-                }
-                let paths = '';
-                const options = {
-                    listeners: {
-                        stdout: (data) => {
-                            paths += data.toString();
-                        },
-                    }
-                };
-                yield exec.exec('nix-build', allArgs, options);
-                core.endGroup();
-                if (signingKey !== "") {
-                    core.startGroup('Cachix: pushing paths');
-                    yield exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' | cat - store-path-pre-build | sort | uniq -u  | ${cachixExecutable} push ${name}`]);
-                    core.endGroup();
-                }
+                // Remember existing store paths
+                yield exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > /tmp/store-path-pre-build`]);
             }
         }
         catch (error) {
@@ -1030,7 +1005,32 @@ function run() {
         }
     });
 }
-run();
+function upload() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            if (signingKey !== "" && skipPush !== 'true') {
+                core.startGroup('Cachix: pushing paths');
+                yield exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' | cat - /tmp/store-path-pre-build | sort | uniq -u  | ${cachixExecutable} push ${name}`]);
+                core.endGroup();
+            }
+        }
+        catch (error) {
+            core.setFailed(`Action failed with error: ${error}`);
+            throw (error);
+        }
+    });
+}
+// Main
+if (!exports.IsPost) {
+    // Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
+    // This is necessary since we don't have a separate entry point.
+    coreCommand.issueCommand('save-state', { name: 'isPost' }, 'true');
+    setup();
+}
+else {
+    // Post
+    upload();
+}
 
 
 /***/ }),
@@ -1124,26 +1124,6 @@ function escapeProperty(s) {
         .replace(/,/g, '%2C');
 }
 //# sourceMappingURL=command.js.map
-
-/***/ }),
-
-/***/ 443:
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function prependEach(elem, array) {
-    const init = [];
-    return array.reduce((r, a) => r.concat(elem, a), init);
-}
-exports.prependEach = prependEach;
-;
-function nonEmptySplit(str, separator) {
-    return str.split(separator).filter(word => word != "");
-}
-exports.nonEmptySplit = nonEmptySplit;
-
 
 /***/ }),
 
