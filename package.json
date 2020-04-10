@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "description": "nix-build with the help of caching to Cachix",
-  "main": "lib/main.js",
+  "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && ncc build -o dist/main src/main.ts",
     "test": "jest"
   },
   "repository": {
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@types/jest": "^24.0.13",
     "@types/node": "^12.0.4",
+    "@zeit/ncc": "^0.20.5",
     "jest": "^24.8.0",
     "jest-circus": "^24.7.1",
     "ts-jest": "^24.0.2",
