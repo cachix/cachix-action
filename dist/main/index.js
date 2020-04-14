@@ -986,7 +986,7 @@ function run() {
             const authToken = core.getInput('authToken');
             const cachixExecutable = "/nix/var/nix/profiles/per-user/runner/profile/bin/cachix";
             core.startGroup('Cachix: installing');
-            yield exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
+            yield exec.exec('nix-env', ['--quiet', '-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
             core.endGroup();
             // for private caches
             if (authToken !== "") {
