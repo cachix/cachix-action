@@ -91,3 +91,6 @@ typings/
 
 # DynamoDB Local files
 .dynamodb/
+
+# Skip the lib folder
+lib/

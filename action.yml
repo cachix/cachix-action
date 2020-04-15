@@ -22,4 +22,4 @@ branding:
   icon: 'database'
 runs:
   using: 'node12'
-  main: 'lib/main.js'
+  main: 'dist/main/index.js'
