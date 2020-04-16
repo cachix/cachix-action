@@ -17,7 +17,7 @@ async function run() {
     const cachixExecutable = "/nix/var/nix/profiles/per-user/runner/profile/bin/cachix";
 
     core.startGroup('Cachix: installing')
-    await exec.exec('nix-env', ['-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
+    await exec.exec('nix-env', ['--quiet', '-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
     core.endGroup()
 
     // for private caches
