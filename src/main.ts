@@ -1,21 +1,18 @@
 import * as core from '@actions/core';
+import * as coreCommand from '@actions/core/lib/command'
 import * as exec from '@actions/exec';
-import { prependEach, nonEmptySplit } from './strings';
-import { exit } from 'process';
 
+export const IsPost = !!process.env['STATE_isPost']
 
-async function run() {
+// inputs
+const name = core.getInput('name', { required: true });
+const signingKey = core.getInput('signingKey');
+const authToken = core.getInput('authToken')
+const skipPush = core.getInput('skipPush');
+const cachixExecutable = '/nix/var/nix/profiles/per-user/runner/profile/bin/cachix';
+
+async function setup() {
   try {
-    // inputs
-    const name = core.getInput('name', { required: true });
-    const file = core.getInput('file');
-    const skipNixBuild = core.getInput('skipNixBuild');
-    const attributes = core.getInput('attributes');
-    const nixBuildArgs = core.getInput('nixBuildArgs');
-    const signingKey = core.getInput('signingKey');
-    const authToken = core.getInput('authToken')
-    const cachixExecutable = "/nix/var/nix/profiles/per-user/runner/profile/bin/cachix";
-
     core.startGroup('Cachix: installing')
     await exec.exec('nix-env', ['--quiet', '-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
     core.endGroup()
@@ -31,36 +28,8 @@ async function run() {
 
     if (signingKey !== "") {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
-    }
-
-    if (skipNixBuild !== 'true') {
-      const args = prependEach('-A', nonEmptySplit(attributes, /\s+/)).concat([file || "default.nix"]);
-      const additionalArgs = nonEmptySplit(nixBuildArgs, /\s+/);
-      const allArgs = additionalArgs.concat(args);
-
-      core.startGroup(`nix-build ${allArgs.join(' ')}`);
- 
-      if (signingKey !== "") {
-        // Remember existing store paths
-        await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > store-path-pre-build`]);
-      }
-
-      let paths = '';
-      const options = {
-        listeners: {
-          stdout: (data: Buffer) => {
-            paths += data.toString();
-          },
-        }
-      };
-      await exec.exec('nix-build', allArgs, options);
-      core.endGroup()
-
-      if (signingKey !== "") {
-        core.startGroup('Cachix: pushing paths');
-        await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' | cat - store-path-pre-build | sort | uniq -u  | ${cachixExecutable} push ${name}`]);
-        core.endGroup();
-      }
+      // Remember existing store paths
+      await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > /tmp/store-path-pre-build`]);
     }
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
@@ -68,4 +37,26 @@ async function run() {
   }
 }
 
-run();
+async function upload() {
+  try {
+    if (signingKey !== "" && skipPush !== 'true') {
+      core.startGroup('Cachix: pushing paths');
+      await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' | cat - /tmp/store-path-pre-build | sort | uniq -u  | ${cachixExecutable} push ${name}`]);
+      core.endGroup();
+    }
+  } catch (error) {
+    core.setFailed(`Action failed with error: ${error}`);
+    throw (error);
+  }
+}
+
+// Main
+if (!IsPost) {
+  // Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
+  // This is necessary since we don't have a separate entry point.
+  coreCommand.issueCommand('save-state', {name: 'isPost'}, 'true')
+  setup()
+} else {
+  // Post
+  upload()
+}
