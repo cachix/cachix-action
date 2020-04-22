@@ -45,7 +45,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: cachix/install-nix-action@v8
-    - uses: cachix/cachix-action@v5
+    - uses: cachix/cachix-action@v6
       with:
         name: mycache
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
