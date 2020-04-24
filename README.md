@@ -64,7 +64,7 @@ Cachix auth token and signing key need special care as they give read and write 
 
 > Anyone with write access to a repository can create, read, and use secrets.
 
-Which means all developers with push access can read your secrets and write to your cache.
+Which means all developers with push access can read your secrets and write to your cache. Furthermore, malicious code submitted via a pull request can, once merged into `master`, reveal the tokens.
 
 
 ## Hacking
