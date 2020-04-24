@@ -56,7 +56,16 @@ jobs:
 
 See [action.yml](action.yml) for all options.
 
----
+## Security
+
+Cachix auth token and signing key need special care as they give read and write access to your caches.
+
+[As per GitHub Actions' security model](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets#using-encrypted-secrets-in-a-workflow):
+
+> Anyone with write access to a repository can create, read, and use secrets.
+
+Which means all developers with push access can read your secrets and write to your cache.
+
 
 ## Hacking
 
