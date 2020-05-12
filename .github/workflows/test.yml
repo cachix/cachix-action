@@ -4,45 +4,53 @@ on:
   push:
 
 jobs:
-  tests:
+  public-cache:
     strategy:
       matrix:
         os: [ubuntu-18.04, macos]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - run: yarn install --frozen-lockfile
     - run: yarn build
-    - run: yarn test
     - uses: cachix/install-nix-action@v8
     - name: Test public cache
       uses: ./
       with:
         name: cachix-action
-        file: test.nix
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+    - run: nix-build test.nix
+
+  public-cache-no-signing-key:
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, macos]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+    - run: yarn install --frozen-lockfile
+    - run: yarn build
+    - uses: cachix/install-nix-action@v8
     - name: Test public cache no signing key
       uses: ./
       with:
         name: cachix-action
-        file: test.nix
-        signingKey: ''
-    - name: Test public cache no pushing
-      uses: ./
-      with:
-        name: cachix-action
-        skipNixBuild: true
-    - name: Test nixBuildArgs parameter
-      uses: ./
-      with:
-        name: cachix-action
-        file: test-with-arg.nix
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        nixBuildArgs: --argstr arg foobar
+    - run: nix-build test.nix
+
+  private-cache:
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, macos]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+    - run: yarn install --frozen-lockfile
+    - run: yarn build
+    - uses: cachix/install-nix-action@v8
     - name: Test private cache
       uses: ./
       with:
         name: cachix-action-private
-        file: test.nix
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}'
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - run: nix-build test.nix
