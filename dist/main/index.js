@@ -1011,7 +1011,7 @@ function upload() {
         try {
             if (signingKey !== "" && skipPush !== 'true') {
                 core.startGroup('Cachix: pushing paths');
-                child_process_1.execFileSync(`${__dirname}/push-paths.sh`, { stdio: 'inherit' });
+                child_process_1.execFileSync(`${__dirname}/push-paths.sh`, [cachixExecutable, name], { stdio: 'inherit' });
                 core.endGroup();
             }
         }
