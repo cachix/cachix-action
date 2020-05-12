@@ -1,4 +1,5 @@
 import * as core from '@actions/core';
+import { execFileSync } from 'child_process';
 import * as coreCommand from '@actions/core/lib/command'
 import * as exec from '@actions/exec';
 
@@ -41,7 +42,7 @@ async function upload() {
   try {
     if (signingKey !== "" && skipPush !== 'true') {
       core.startGroup('Cachix: pushing paths');
-      await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' | cat - /tmp/store-path-pre-build | sort | uniq -u  | ${cachixExecutable} push ${name}`]);
+      execFileSync(`${__dirname}/push-paths.sh`, [cachixExecutable, name], { stdio: 'inherit' });
       core.endGroup();
     }
   } catch (error) {
