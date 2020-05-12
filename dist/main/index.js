@@ -971,6 +971,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
+const child_process_1 = __webpack_require__(129);
 const coreCommand = __importStar(__webpack_require__(431));
 const exec = __importStar(__webpack_require__(986));
 exports.IsPost = !!process.env['STATE_isPost'];
@@ -1010,7 +1011,7 @@ function upload() {
         try {
             if (signingKey !== "" && skipPush !== 'true') {
                 core.startGroup('Cachix: pushing paths');
-                yield exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' | cat - /tmp/store-path-pre-build | sort | uniq -u  | ${cachixExecutable} push ${name}`]);
+                child_process_1.execFileSync(`${__dirname}/push-paths.sh`, { stdio: 'inherit' });
                 core.endGroup();
             }
         }
