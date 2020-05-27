@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: cachix/install-nix-action@v8
+    - uses: cachix/install-nix-action@v9
     - uses: cachix/cachix-action@v6
       with:
         name: mycache
