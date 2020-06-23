@@ -5,6 +5,8 @@ inputs:
   name:
     description: 'Name of a cachix cache to push and pull/substitute'
     required: true
+  extraPullNames:
+    description: 'Comma-separated list of names for extra cachix caches to pull/substitute'
   authToken:
     description: 'Authentication token for Cachix, needed only for private cache access'
   signingKey:

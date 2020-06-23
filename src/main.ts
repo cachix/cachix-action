@@ -7,6 +7,7 @@ export const IsPost = !!process.env['STATE_isPost']
 
 // inputs
 const name = core.getInput('name', { required: true });
+const extraPullNames = core.getInput('extraPullNames');
 const signingKey = core.getInput('signingKey');
 const authToken = core.getInput('authToken')
 const skipPush = core.getInput('skipPush');
@@ -26,6 +27,16 @@ async function setup() {
     core.startGroup(`Cachix: using cache ` + name);
     await exec.exec('cachix', ['use', name]);
     core.endGroup();
+
+    if (extraPullNames != "") {
+      core.startGroup(`Cachix: using extra caches ` + extraPullNames);
+      const extraPullNameList = extraPullNames.split(',');
+      for (let itemName of extraPullNameList) {
+        const trimmedItemName = itemName.trim();
+        await exec.exec('cachix', ['use', trimmedItemName]);
+      }
+      core.endGroup();
+    }
 
     if (signingKey !== "") {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
