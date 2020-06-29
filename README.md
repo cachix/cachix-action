@@ -4,7 +4,10 @@
 
 Build software only once using [Nix](https://nixos.org/nix/) with the help of [Cachix](https://cachix.org).
 
-This action will configure Cachix and invoke `nix-build`.
+This action will configure Cachix:
+
+- all further Nix invocations will use specified binary cache
+- at the end of the job, all newly built store paths will be pushed to Cachix
 
 ## Why do I need this
 
