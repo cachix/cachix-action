@@ -2,27 +2,15 @@
 
 ![github actions badge](https://github.com/cachix/cachix-action/workflows/cachix-action%20test/badge.svg)
 
-Build software only once using [Nix](https://nixos.org/nix/) with the help of [Cachix](https://cachix.org).
+One nice benefit of Nix is that CI can build and cache developer environments for every project on every branch using binary caches.
 
-This action will configure Cachix:
+Another important aspect of CI is the feedback loop of how many minutes does the build take to finish.
 
-- all further Nix invocations will use specified binary cache
-- at the end of the job, all newly built store paths will be pushed to Cachix
+With a simple configuration using Cachix, you’ll never have to build any derivation twice and share them with all your developers.
 
-## Why do I need this
+After each job, just built derivations are pushed to your binary cache.
 
-Because you'd like for your CI to be fast. Let me explain.
-
-Directory-based caching on a typical CI doesn't work well for Nix.
-
-`/nix/store` is a global storage of everything Nix operates on. These are
-your sources, patches, tarballs, packages, configuration.
-
-A directory-based cache requires downloading a whole store, including the irrelevant parts. `cachix-action` will only fetch what's needed by configuring a Nix binary cache.
-
-When the build is done, cachix-action only has to upload the new store paths, rather than syncing the whole store.
-
-Purging paths from a directory-based cache is not feasible because it'd have to be aware of all branches and their respective contents somehow.
+Before each job, derivations to be built are first substituted (if they exist) from your binary cache.
 
 ## Usage
 
