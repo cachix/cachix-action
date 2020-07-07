@@ -12,38 +12,9 @@ After each job, just built derivations are pushed to your binary cache.
 
 Before each job, derivations to be built are first substituted (if they exist) from your binary cache.
 
-## Usage
+## Getting started
 
-### 1. [Login to Cachix](https://cachix.org/api/v1/login) and create a new cache.
-    1. Follow getting started to create your signing key
-    2. Backup the signing key in the process.
-
-### 2. As an admin of your github repository:
-    1. Click on Settings
-    2. Click on Secrets ([If missing, you need to sign up first for actions beta](https://github.com/features/actions))
-    3. Add your signing key value under name `CACHIX_SIGNING_KEY`.
-
-### 3. Create `.github/workflows/test.yml` in your repo with the following contents:
-
-```yaml
-name: "Test"
-on:
-  pull_request:
-  push:
-jobs:
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2.3.1
-    - uses: cachix/install-nix-action@v10
-    - uses: cachix/cachix-action@v6
-      with:
-        name: mycache
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        # Only needed for private caches
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - run: nix-build
-```
+Follow [Continuous Integration with GitHub Actions](https://nix.dev/tutorials/continuous-integration-github-actions.html) tutorial.
 
 See [action.yml](action.yml) for all options.
 
