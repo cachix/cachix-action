@@ -12,11 +12,14 @@ const signingKey = core.getInput('signingKey');
 const authToken = core.getInput('authToken')
 const skipPush = core.getInput('skipPush');
 const cachixExecutable = '/nix/var/nix/profiles/per-user/runner/profile/bin/cachix';
+const installCommand =
+  core.getInput('installCommand') ||
+  "nix-env --quiet -iA cachix -f https://cachix.org/api/v1/install";
 
 async function setup() {
   try {
     core.startGroup('Cachix: installing')
-    await exec.exec('nix-env', ['--quiet', '-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
+    await exec.exec('bash', ['-c', installCommand]);
     core.endGroup()
 
     // for private caches

@@ -982,11 +982,13 @@ const signingKey = core.getInput('signingKey');
 const authToken = core.getInput('authToken');
 const skipPush = core.getInput('skipPush');
 const cachixExecutable = '/nix/var/nix/profiles/per-user/runner/profile/bin/cachix';
+const installCommand = core.getInput('installCommand') ||
+    "nix-env --quiet -iA cachix -f https://cachix.org/api/v1/install";
 function setup() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             core.startGroup('Cachix: installing');
-            yield exec.exec('nix-env', ['--quiet', '-iA', 'cachix', '-f', 'https://cachix.org/api/v1/install']);
+            yield exec.exec('bash', ['-c', installCommand]);
             core.endGroup();
             // for private caches
             if (authToken !== "") {

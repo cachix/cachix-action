@@ -56,3 +56,21 @@ jobs:
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}'
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - run: nix-build test.nix
+
+  installCommand:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+    - run: yarn install --frozen-lockfile
+    - run: yarn build
+    - uses: cachix/install-nix-action@v10
+    - name: Test private cache
+      uses: ./
+      with:
+        name: cachix-action
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+        installCommand: 'nix-env -f https://github.com/NixOS/nixpkgs/archive/master.tar.gz -iA cachix'
+    - run: nix-build test.nix
