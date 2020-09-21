@@ -1,7 +1,9 @@
 name: "cachix-action test"
 on:
   pull_request:
-  push:
+  push:    
+    branches:
+      - master
 
 jobs:
   public-cache:
