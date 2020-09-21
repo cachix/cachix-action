@@ -4,7 +4,7 @@
 , currentTime ? builtins.currentTime
 }:
 
-with import <nixpkgs> {};
+with (import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/21d8e70a69f704a6ab971b2d8265d40cc7bb69b1.tar.gz") {});
 
 let
   drv = i: runCommand "${toString currentTime}-${toString i}" {} ''
