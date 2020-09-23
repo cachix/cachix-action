@@ -74,5 +74,5 @@ jobs:
       with:
         name: cachix-action
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        installCommand: 'nix-env -f https://cachix.org/api/v1/install -iA cachix'
+        installCommand: 'nix-env -j8 -f https://cachix.org/api/v1/install -iA cachix'
     - run: nix-build test.nix

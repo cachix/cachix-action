@@ -14,7 +14,7 @@ const skipPush = core.getInput('skipPush');
 const cachixExecutable = '/nix/var/nix/profiles/per-user/runner/profile/bin/cachix';
 const installCommand =
   core.getInput('installCommand') ||
-  "nix-env --quiet -iA cachix -f https://cachix.org/api/v1/install";
+  "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
 
 async function setup() {
   try {
