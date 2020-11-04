@@ -17,7 +17,7 @@ jobs:
     - run: yarn build
     # check if typescript generation was committed
     - run: git diff --exit-code
-    - uses: cachix/install-nix-action@v11
+    - uses: cachix/install-nix-action@v12
     - name: Test public cache
       uses: ./
       with:
@@ -34,7 +34,7 @@ jobs:
     - uses: actions/checkout@v2
     - run: yarn install --frozen-lockfile
     - run: yarn build
-    - uses: cachix/install-nix-action@v11
+    - uses: cachix/install-nix-action@v12
     - name: Test public cache no signing key
       uses: ./
       with:
@@ -50,7 +50,7 @@ jobs:
     - uses: actions/checkout@v2
     - run: yarn install --frozen-lockfile
     - run: yarn build
-    - uses: cachix/install-nix-action@v11
+    - uses: cachix/install-nix-action@v12
     - name: Test private cache
       uses: ./
       with:
@@ -68,7 +68,7 @@ jobs:
     - uses: actions/checkout@v2
     - run: yarn install --frozen-lockfile
     - run: yarn build
-    - uses: cachix/install-nix-action@v11
+    - uses: cachix/install-nix-action@v12
     - name: Test private cache
       uses: ./
       with:
