@@ -22,6 +22,7 @@ jobs:
       uses: ./
       with:
         name: cachix-action
+        installCommand: nix-env -if https://github.com/cachix/cachix/tarball/0c9f988b40415e103526e1b33d2390d1f3da9543 --substituters 'https://cache.nixos.org https://cachix.cachix.org' --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
     - run: nix-build test.nix
 
@@ -38,6 +39,7 @@ jobs:
     - name: Test public cache no signing key
       uses: ./
       with:
+        installCommand: nix-env -if https://github.com/cachix/cachix/tarball/0c9f988b40415e103526e1b33d2390d1f3da9543 --substituters 'https://cache.nixos.org https://cachix.cachix.org' --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
         name: cachix-action
     - run: nix-build test.nix
 
@@ -55,6 +57,7 @@ jobs:
       uses: ./
       with:
         name: cachix-action-private
+        installCommand: nix-env -if https://github.com/cachix/cachix/tarball/0c9f988b40415e103526e1b33d2390d1f3da9543 --substituters 'https://cache.nixos.org https://cachix.cachix.org' --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}'
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - run: nix-build test.nix
