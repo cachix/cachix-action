@@ -11,7 +11,7 @@ const extraPullNames = core.getInput('extraPullNames');
 const signingKey = core.getInput('signingKey');
 const authToken = core.getInput('authToken')
 const skipPush = core.getInput('skipPush');
-const cachixExecutable = '/nix/var/nix/profiles/per-user/runner/profile/bin/cachix';
+const cachixExecutable = process.env.HOME + '/.nix-profile/bin/cachix';
 const installCommand =
   core.getInput('installCommand') ||
   "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
