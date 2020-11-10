@@ -22,7 +22,7 @@ async function setup() {
     await exec.exec('bash', ['-c', installCommand]);
     core.endGroup()
 
-    // for private caches
+    // for managed signing key and private caches
     if (authToken !== "") {
       await exec.exec(cachixExecutable, ['authtoken', authToken]);
     }
@@ -43,9 +43,9 @@ async function setup() {
 
     if (signingKey !== "") {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
-      // Remember existing store paths
-      await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > /tmp/store-path-pre-build`]);
     }
+    // Remember existing store paths
+    await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > /tmp/store-path-pre-build`]);
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
     throw (error);
@@ -54,10 +54,14 @@ async function setup() {
 
 async function upload() {
   try {
-    if (signingKey !== "" && skipPush !== 'true') {
+    if (skipPush === 'true') {
+      core.info('Pushing is disabled as skipPush is set to true');
+    } else if (signingKey !== "" || authToken !== "") {
       core.startGroup('Cachix: pushing paths');
       execFileSync(`${__dirname}/push-paths.sh`, [cachixExecutable, name], { stdio: 'inherit' });
       core.endGroup();
+    } else {
+      core.info('Pushing is disabled as signing key nor auth token are set.');
     }
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
