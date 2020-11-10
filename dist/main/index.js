@@ -1052,7 +1052,7 @@ function setup() {
             core.startGroup('Cachix: installing');
             yield exec.exec('bash', ['-c', installCommand]);
             core.endGroup();
-            // for private caches
+            // for managed signing key and private caches
             if (authToken !== "") {
                 yield exec.exec(cachixExecutable, ['authtoken', authToken]);
             }
@@ -1070,9 +1070,9 @@ function setup() {
             }
             if (signingKey !== "") {
                 core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
-                // Remember existing store paths
-                yield exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > /tmp/store-path-pre-build`]);
             }
+            // Remember existing store paths
+            yield exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > /tmp/store-path-pre-build`]);
         }
         catch (error) {
             core.setFailed(`Action failed with error: ${error}`);
@@ -1083,10 +1083,16 @@ function setup() {
 function upload() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            if (signingKey !== "" && skipPush !== 'true') {
+            if (skipPush === 'true') {
+                core.info('Pushing is disabled as skipPush is set to true');
+            }
+            else if (signingKey !== "" || authToken !== "") {
                 core.startGroup('Cachix: pushing paths');
                 child_process_1.execFileSync(`${__dirname}/push-paths.sh`, [cachixExecutable, name], { stdio: 'inherit' });
                 core.endGroup();
+            }
+            else {
+                core.info('Pushing is disabled as signing key nor auth token are set.');
             }
         }
         catch (error) {
