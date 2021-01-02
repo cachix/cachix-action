@@ -1033,7 +1033,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
-const child_process_1 = __webpack_require__(129);
 const coreCommand = __importStar(__webpack_require__(431));
 const exec = __importStar(__webpack_require__(986));
 exports.IsPost = !!process.env['STATE_isPost'];
@@ -1076,20 +1075,18 @@ function setup() {
         }
         catch (error) {
             core.setFailed(`Action failed with error: ${error}`);
-            throw (error);
         }
     });
 }
 function upload() {
     return __awaiter(this, void 0, void 0, function* () {
+        core.startGroup('Cachix: upload');
         try {
             if (skipPush === 'true') {
                 core.info('Pushing is disabled as skipPush is set to true');
             }
             else if (signingKey !== "" || authToken !== "") {
-                core.startGroup('Cachix: pushing paths');
-                child_process_1.execFileSync(`${__dirname}/push-paths.sh`, [cachixExecutable, name], { stdio: 'inherit' });
-                core.endGroup();
+                yield exec.exec(`${__dirname}/push-paths.sh`, [cachixExecutable, name]);
             }
             else {
                 core.info('Pushing is disabled as signing key nor auth token are set.');
@@ -1097,8 +1094,8 @@ function upload() {
         }
         catch (error) {
             core.setFailed(`Action failed with error: ${error}`);
-            throw (error);
         }
+        core.endGroup();
     });
 }
 // Main
