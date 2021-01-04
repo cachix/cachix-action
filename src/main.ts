@@ -51,7 +51,7 @@ async function setup() {
 }
 
 async function upload() {
-  core.startGroup('Cachix: upload');
+  core.startGroup('Cachix: push');
   try {
     if (skipPush === 'true') {
       core.info('Pushing is disabled as skipPush is set to true');

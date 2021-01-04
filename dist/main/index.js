@@ -1080,7 +1080,7 @@ function setup() {
 }
 function upload() {
     return __awaiter(this, void 0, void 0, function* () {
-        core.startGroup('Cachix: upload');
+        core.startGroup('Cachix: push');
         try {
             if (skipPush === 'true') {
                 core.info('Pushing is disabled as skipPush is set to true');
