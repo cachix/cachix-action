@@ -1,5 +1,4 @@
 import * as core from '@actions/core';
-import { execFileSync } from 'child_process';
 import * as coreCommand from '@actions/core/lib/command'
 import * as exec from '@actions/exec';
 
@@ -48,25 +47,23 @@ async function setup() {
     await exec.exec("sh", ["-c", `nix path-info --all | grep -v '\.drv$' > /tmp/store-path-pre-build`]);
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
-    throw (error);
   }
 }
 
 async function upload() {
+  core.startGroup('Cachix: push');
   try {
     if (skipPush === 'true') {
       core.info('Pushing is disabled as skipPush is set to true');
     } else if (signingKey !== "" || authToken !== "") {
-      core.startGroup('Cachix: pushing paths');
-      execFileSync(`${__dirname}/push-paths.sh`, [cachixExecutable, name], { stdio: 'inherit' });
-      core.endGroup();
+      await exec.exec(`${__dirname}/push-paths.sh`, [cachixExecutable, name]);
     } else {
       core.info('Pushing is disabled as signing key nor auth token are set.');
     }
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
-    throw (error);
   }
+  core.endGroup();
 }
 
 // Main
