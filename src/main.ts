@@ -10,6 +10,7 @@ const extraPullNames = core.getInput('extraPullNames');
 const signingKey = core.getInput('signingKey');
 const authToken = core.getInput('authToken')
 const skipPush = core.getInput('skipPush');
+const pushFilter = core.getInput('pushFilter');
 const cachixExecutable = process.env.HOME + '/.nix-profile/bin/cachix';
 const installCommand =
   core.getInput('installCommand') ||
@@ -56,7 +57,7 @@ async function upload() {
     if (skipPush === 'true') {
       core.info('Pushing is disabled as skipPush is set to true');
     } else if (signingKey !== "" || authToken !== "") {
-      await exec.exec(`${__dirname}/push-paths.sh`, [cachixExecutable, name]);
+      await exec.exec(`${__dirname}/push-paths.sh`, [cachixExecutable, name, pushFilter]);
     } else {
       core.info('Pushing is disabled as signing key nor auth token are set.');
     }
