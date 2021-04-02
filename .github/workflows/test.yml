@@ -12,12 +12,12 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.4
     - run: yarn install --frozen-lockfile
     - run: yarn build
     # check if typescript generation was committed
     - run: git diff --exit-code
-    - uses: cachix/install-nix-action@v12
+    - uses: cachix/install-nix-action@v13
     - name: Test public cache
       uses: ./
       with:
@@ -31,10 +31,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.4
     - run: yarn install --frozen-lockfile
     - run: yarn build
-    - uses: cachix/install-nix-action@v12
+    - uses: cachix/install-nix-action@v13
     - name: Test public cache no signing key
       uses: ./
       with:
@@ -47,10 +47,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.4
     - run: yarn install --frozen-lockfile
     - run: yarn build
-    - uses: cachix/install-nix-action@v12
+    - uses: cachix/install-nix-action@v13
     - name: Test private cache
       uses: ./
       with:
@@ -65,10 +65,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.4
     - run: yarn install --frozen-lockfile
     - run: yarn build
-    - uses: cachix/install-nix-action@v12
+    - uses: cachix/install-nix-action@v13
     - name: Test private cache
       uses: ./
       with:
