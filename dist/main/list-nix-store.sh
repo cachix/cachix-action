@@ -12,6 +12,10 @@ for file in /nix/store/*; do
     # Skip .check file produced by --keep-failed
     continue
     ;;
+  *.lock)
+    # Skip .lock files
+    continue
+    ;;
   *)
     echo "$file"
     ;;
