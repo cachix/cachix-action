@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PATHS=$(comm -13 <(sort /tmp/store-path-pre-build) <("$(dirname "$0")"/list-nix-store.sh))
+cachix=$1 cachixArgs=${2:--j8} cache=$3 pathsToPush=$4 pushFilter=$5
 
-if [[ $3 != "" ]]; then
-    PATHS=$(echo "$PATHS" | grep -vEe "$3")
+if [[ $pathsToPush == "" ]]; then
+    pathsToPush=$(comm -13 <(sort /tmp/store-path-pre-build) <("$(dirname "$0")"/list-nix-store.sh))
+
+    if [[ $pushFilter != "" ]]; then
+        pathsToPush=$(echo "$pathsToPush" | grep -vEe "$pushFilter")
+    fi
 fi
 
-echo "$PATHS" | "$1" push -j8 "$2"
+echo "$pathsToPush" | "$cachix" push $cachixArgs "$cache"
