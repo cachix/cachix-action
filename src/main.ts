@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as coreCommand from '@actions/core/lib/command'
 import * as exec from '@actions/exec';
+import which from 'which';
 
 export const IsPost = !!process.env['STATE_isPost']
 
@@ -17,9 +18,11 @@ const installCommand =
 
 async function setup() {
   try {
-    core.startGroup('Cachix: installing')
-    await exec.exec('bash', ['-c', installCommand]);
-    core.endGroup()
+    if(!which.sync('cachix', { nothrow: true })) {
+      core.startGroup('Cachix: installing')
+      await exec.exec('bash', ['-c', installCommand]);
+      core.endGroup()
+    }
 
     // for managed signing key and private caches
     if (authToken !== "") {
