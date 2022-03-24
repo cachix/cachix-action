@@ -1090,7 +1090,7 @@ function upload() {
                 yield exec.exec(`${__dirname}/push-paths.sh`, [cachixExecutable, name, pushFilter]);
             }
             else {
-                core.info('Pushing is disabled as signingKey nor authToken are set (or are emtpy?) in your YAML file.');
+                core.info('Pushing is disabled as signingKey nor authToken are set (or are empty?) in your YAML file.');
             }
         }
         catch (error) {
