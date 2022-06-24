@@ -8,6 +8,10 @@ for file in /nix/store/*; do
     # Avoid .drv as they are not generally useful
     continue
     ;;
+  *.drv.chroot)
+    # Avoid .drv.chroot as they are not generally useful
+    continue
+    ;;
   *.check)
     # Skip .check file produced by --keep-failed
     continue
