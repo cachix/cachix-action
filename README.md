@@ -1,4 +1,4 @@
-# cachix-action
+# cachix-actiontest
 
 ![github actions badge](https://github.com/cachix/cachix-action/workflows/cachix-action%20test/badge.svg)
 
