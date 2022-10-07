@@ -25,6 +25,6 @@ branding:
   color: 'blue'
   icon: 'database'
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/main/index.js'
   post: 'dist/main/index.js'
