@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as coreCommand from '@actions/core/lib/command'
 import * as exec from '@actions/exec';
+import which from 'which';
 
 export const IsPost = !!process.env['STATE_isPost']
 
@@ -12,7 +13,6 @@ const authToken = core.getInput('authToken')
 const skipPush = core.getInput('skipPush');
 const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
-const cachixExecutable = process.env.HOME + '/.nix-profile/bin/cachix';
 const cachixArgs = core.getInput('cachixArgs');
 const installCommand =
   core.getInput('installCommand') ||
@@ -20,13 +20,19 @@ const installCommand =
 
 async function setup() {
   try {
-    core.startGroup('Cachix: installing')
-    await exec.exec('bash', ['-c', installCommand]);
+    if(!which.sync('cachix', { nothrow: true })) {
+      core.startGroup('Cachix: installing')
+      await exec.exec('bash', ['-c', installCommand]);
+      core.endGroup()
+    }
+
+    core.startGroup('Cachix: checking version')
+    await exec.exec('cachix', ['--version']);
     core.endGroup()
 
     // for managed signing key and private caches
     if (authToken !== "") {
-      await exec.exec(cachixExecutable, ['authtoken', authToken]);
+      await exec.exec('cachix', ['authtoken', authToken]);
     }
 
     core.startGroup(`Cachix: using cache ` + name);
@@ -59,7 +65,7 @@ async function upload() {
     if (skipPush === 'true') {
       core.info('Pushing is disabled as skipPush is set to true');
     } else if (signingKey !== "" || authToken !== "") {
-      await exec.exec(`${__dirname}/push-paths.sh`, [cachixExecutable, cachixArgs, name, pathsToPush, pushFilter]);
+      await exec.exec(`${__dirname}/push-paths.sh`, ['cachix', cachixArgs, name, pathsToPush, pushFilter]);
     } else {
       core.info('Pushing is disabled as signingKey nor authToken are set (or are empty?) in your YAML file.');
     }
