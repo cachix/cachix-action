@@ -21,6 +21,8 @@ inputs:
     description: 'Extra command-line arguments to pass to cachix. If empty, defaults to -j8'
   installCommand:
     description: 'Override the default cachix installation method'
+  useFlakes:
+    description: 'Use nix flakes (requires jq): input|runtime'
 branding:
   color: 'blue'
   icon: 'database'
