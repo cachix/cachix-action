@@ -41,6 +41,24 @@ jobs:
         name: cachix-action
     - run: nix-build test.nix
 
+  pushFilter:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+    - run: yarn install --frozen-lockfile
+    - run: yarn build
+    - uses: cachix/install-nix-action@v18
+    - name: Test pushFilter
+      uses: ./
+      with:
+        name: cachix-action
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+        pushFilter: "tmp-*-"
+    - run: echo hi
+
   private-cache:
     if: ${{ github.ref == 'refs/heads/master' }}
     strategy:
@@ -58,7 +76,7 @@ jobs:
         name: cachix-action-private
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}'
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-    - run: nix-build test.nix
+    - run: echo hi
 
   installCommand:
     strategy:
