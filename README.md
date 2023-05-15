@@ -14,7 +14,7 @@ Before each job, derivations to be built are first substituted (if they exist) f
 
 ## Getting started
 
-Follow [Continuous Integration with GitHub Actions](https://nix.dev/tutorials/continuous-integration-github-actions.html) tutorial.
+Follow [Continuous Integration with GitHub Actions](https://nix.dev/tutorials/nixos/build-and-deploy/continuous-integration-github-actions) tutorial.
 
 See [action.yml](action.yml) for all options.
 
