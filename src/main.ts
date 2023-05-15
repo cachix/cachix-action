@@ -16,6 +16,7 @@ const cachixArgs = core.getInput('cachixArgs');
 const installCommand =
   core.getInput('installCommand') ||
   "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
+const useFlakes = core.getInput('useFlakes');
 
 async function setup() {
   try {
@@ -64,7 +65,7 @@ async function upload() {
     if (skipPush === 'true') {
       core.info('Pushing is disabled as skipPush is set to true');
     } else if (signingKey !== "" || authToken !== "") {
-      await exec.exec(`${__dirname}/push-paths.sh`, ['cachix', cachixArgs, name, pathsToPush, pushFilter]);
+      await exec.exec(`${__dirname}/push-paths.sh`, ['cachix', cachixArgs, name, pathsToPush, pushFilter, useFlakes]);
     } else {
       core.info('Pushing is disabled as signingKey nor authToken are set (or are empty?) in your YAML file.');
     }
