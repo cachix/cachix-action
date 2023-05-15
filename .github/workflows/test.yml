@@ -88,8 +88,8 @@ jobs:
     - name: Install Nix
       uses: cachix/install-nix-action@v20
       with: 
-        nix_path: nixpkgs=channel:nixos-21.05
-        install_url: https://nixos-nix-install-tests.cachix.org/serve/i6laym9jw3wg9mw6ncyrk6gjx4l34vvx/install
+        nix_path: nixpkgs=channel:nixos-22.11
+        install_url: https://nixos-nix-install-tests.cachix.org/serve/kkq45x7yrzvxq8627fi6hkswnfa7mg2l/install
         install_options: '--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve'
     - run: yarn install --frozen-lockfile
     - run: yarn build
