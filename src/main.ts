@@ -16,6 +16,7 @@ const cachixArgs = core.getInput('cachixArgs');
 const installCommand =
   core.getInput('installCommand') ||
   "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
+const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
 
 async function setup() {
   try {
@@ -34,9 +35,13 @@ async function setup() {
       await exec.exec('cachix', ['authtoken', authToken]);
     }
 
-    core.startGroup(`Cachix: using cache ` + name);
-    await exec.exec('cachix', ['use', name]);
-    core.endGroup();
+    if (skipAddingSubstituter === 'true') {
+      core.info('Not adding Cachix cache to substituters as skipAddingSubstituter is set to true')
+    } else {
+      core.startGroup(`Cachix: using cache ` + name);
+      await exec.exec('cachix', ['use', name]);
+      core.endGroup();
+    }
 
     if (extraPullNames != "") {
       core.startGroup(`Cachix: using extra caches ` + extraPullNames);
