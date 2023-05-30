@@ -21,6 +21,8 @@ inputs:
     description: 'Extra command-line arguments to pass to cachix. If empty, defaults to -j8'
   installCommand:
     description: 'Override the default cachix installation method'
+  skipAddingSubstituter:
+    description: 'Set to true to skip adding cachix cache as a substitute'
 branding:
   color: 'blue'
   icon: 'database'

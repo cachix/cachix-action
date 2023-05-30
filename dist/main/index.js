@@ -4301,6 +4301,7 @@ const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
 const installCommand = core.getInput('installCommand') ||
     "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
+const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
 function setup() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -4316,9 +4317,14 @@ function setup() {
             if (authToken !== "") {
                 yield exec.exec('cachix', ['authtoken', authToken]);
             }
-            core.startGroup(`Cachix: using cache ` + name);
-            yield exec.exec('cachix', ['use', name]);
-            core.endGroup();
+            if (skipAddingSubstituter === 'true') {
+                core.info('Not adding Cachix cache to substituters as skipAddingSubstituter is set to true');
+            }
+            else {
+                core.startGroup(`Cachix: using cache ` + name);
+                yield exec.exec('cachix', ['use', name]);
+                core.endGroup();
+            }
             if (extraPullNames != "") {
                 core.startGroup(`Cachix: using extra caches ` + extraPullNames);
                 const extraPullNameList = extraPullNames.split(',');
