@@ -21,7 +21,7 @@ const installCommand =
   core.getInput('installCommand') ||
   "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
 const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
-const useDaemon = core.getInput('useDaemon');
+const useDaemon = (core.getInput('useDaemon') === 'true') ? true : false;
 
 const ENV_CACHIX_DAEMON_DIR = 'CACHIX_DAEMON_DIR';
 
@@ -64,7 +64,7 @@ async function setup() {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
     }
 
-    if (useDaemon === 'true') {
+    if (useDaemon) {
       const tmpdir = process.env['RUNNER_TEMP'] || os.tmpdir();
       const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
       const daemonLog = openSync(`${daemonDir}/daemon.log`, 'a');
@@ -92,8 +92,9 @@ async function setup() {
       await fs.writeFile(postBuildHookPath, `
       #!/bin/sh
 
-      set -eux
-      set -f #disable globbing
+      set -eu
+      set -x # remove in production
+      set -f # disable globbing
       export IFS=''
 
       exec ${cachix} daemon push \
@@ -134,7 +135,7 @@ async function upload() {
     if (skipPush === 'true') {
       core.info('Pushing is disabled as skipPush is set to true');
     } else if (signingKey !== "" || authToken !== "") {
-      if (useDaemon === 'true') {
+      if (useDaemon) {
         const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
         const daemonPid = parseInt(await fs.readFile(`${daemonDir}/daemon.pid`, 'utf8'));
         core.debug(`Found Cachix daemon with pid ${daemonPid}`);
