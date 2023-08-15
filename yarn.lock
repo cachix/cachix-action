@@ -695,6 +695,11 @@
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-2.0.1.tgz#20f18294f797f2209b5f65c8e3b5c8e8261d127c"
   integrity sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==
 
+"@types/tail@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@types/tail/-/tail-2.2.1.tgz#ca8d8ea542cf3fefbdac9e8f131ae04990596f1e"
+  integrity sha512-j75Gs5MiIpNR14wztQ4vtViUqxZi+lcgflyXC7P9iMgNnMab7XcV5p+2590IO3njsWWn5l8C+55ILk2CDDyaHg==
+
 "@types/which@^3.0.0":
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/@types/which/-/which-3.0.0.tgz#849afdd9fdcb0b67339b9cfc80fa6ea4e0253fc5"
@@ -2142,6 +2147,11 @@ supports-preserve-symlinks-flag@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
+
+tail@^2.2.6:
+  version "2.2.6"
+  resolved "https://registry.yarnpkg.com/tail/-/tail-2.2.6.tgz#24abd701963639b896c42496d5f416216ec0b558"
+  integrity sha512-IQ6G4wK/t8VBauYiGPLx+d3fA5XjSVagjWV5SIYzvEvglbQjwEcukeYI68JOPpdydjxhZ9sIgzRlSmwSpphHyw==
 
 test-exclude@^6.0.0:
   version "6.0.0"

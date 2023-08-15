@@ -23,6 +23,8 @@ inputs:
     description: 'Override the default cachix installation method'
   skipAddingSubstituter:
     description: 'Set to true to skip adding cachix cache as a substitute'
+  useDaemon:
+    description: "Push store paths to the cache as they're built with the Cachix Daemon"
 branding:
   color: 'blue'
   icon: 'database'
