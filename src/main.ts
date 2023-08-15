@@ -144,20 +144,9 @@ async function upload() {
         let daemonLog = new Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
         daemonLog.on('line', (line) => core.info(line));
 
-        try {
-          core.debug(`Sending SIGINT to Cachix daemon with pid ${daemonPid}`);
-          // Tell the daemon to wrap up
-          process.kill(daemonPid, 'SIGINT');
-        } catch (err: unknown) {
-          // if (isErrnoException(err) && err.code === 'ESRCH') {
-          //   return;
-          // }
-
-          // throw err;
-        }
-
         // Can't use the socket because we currently close it before the daemon exits
         core.debug('Waiting for Cachix daemon to exit...');
+        await exec.exec("cachix", ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
 
         daemonLog.unwatch();
       } else {
