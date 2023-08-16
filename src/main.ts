@@ -1,7 +1,6 @@
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { spawn } from 'node:child_process';
-import { openSync, writeSync, close } from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -67,7 +66,7 @@ async function setup() {
     if (useDaemon) {
       const tmpdir = process.env['RUNNER_TEMP'] || os.tmpdir();
       const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
-      const daemonLog = openSync(`${daemonDir}/daemon.log`, 'a');
+      const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
 
       const daemon = spawn(
         'cachix',
@@ -76,7 +75,7 @@ async function setup() {
           '--socket', `${daemonDir}/daemon.sock`,
         ],
         {
-          stdio: ['ignore', daemonLog, daemonLog],
+          stdio: ['ignore', daemonLog.fd, daemonLog.fd],
           detached: true,
         }
       );
@@ -107,11 +106,11 @@ async function setup() {
 
       // Register the post-build-hook
       await fs.mkdir(`${process.env['HOME']}/.config/nix`, { recursive: true });
-      const nixConf = openSync(`${process.env['HOME']}/.config/nix/nix.conf`, 'a');
-      writeSync(nixConf, `
+      const nixConf = await fs.open(`${process.env['HOME']}/.config/nix/nix.conf`, 'a');
+      fs.writeFile(nixConf, `
       post-build-hook = ${postBuildHookPath}
       `);
-      close(nixConf);
+      await nixConf.close();
 
       core.exportVariable(ENV_CACHIX_DAEMON_DIR, daemonDir);
 
@@ -140,13 +139,15 @@ async function upload() {
         const daemonPid = parseInt(await fs.readFile(`${daemonDir}/daemon.pid`, 'utf8'));
         core.debug(`Found Cachix daemon with pid ${daemonPid}`);
 
-        // Tail the daemon log async and wait to the process to exit
         let daemonLog = new Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
         daemonLog.on('line', (line) => core.info(line));
 
         // Can't use the socket because we currently close it before the daemon exits
         core.debug('Waiting for Cachix daemon to exit...');
         await exec.exec("cachix", ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
+
+        // Wait a bit for the logs to flush through
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
         daemonLog.unwatch();
       } else {
@@ -160,24 +161,6 @@ async function upload() {
   }
 
   core.endGroup();
-}
-
-interface ErrorLike extends Error {
-  name: string;
-  message: string;
-}
-
-export function isErrorLike(obj: unknown): obj is ErrorLike {
-  return (
-    typeof obj === 'object' && obj !== null && 'name' in obj && 'message' in obj
-  );
-}
-
-export function isErrnoException(obj: unknown): obj is NodeJS.ErrnoException {
-  return (
-    isErrorLike(obj) &&
-    ('errno' in obj || 'code' in obj || 'path' in obj || 'syscall' in obj)
-  );
 }
 
 const isPost = !!process.env['STATE_isPost']
