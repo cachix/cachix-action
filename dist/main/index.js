@@ -3029,6 +3029,521 @@ function copyFile(srcFile, destFile, force) {
 
 /***/ }),
 
+/***/ 7126:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var fs = __nccwpck_require__(7147)
+var core
+if (process.platform === 'win32' || global.TESTING_WINDOWS) {
+  core = __nccwpck_require__(2001)
+} else {
+  core = __nccwpck_require__(9728)
+}
+
+module.exports = isexe
+isexe.sync = sync
+
+function isexe (path, options, cb) {
+  if (typeof options === 'function') {
+    cb = options
+    options = {}
+  }
+
+  if (!cb) {
+    if (typeof Promise !== 'function') {
+      throw new TypeError('callback not provided')
+    }
+
+    return new Promise(function (resolve, reject) {
+      isexe(path, options || {}, function (er, is) {
+        if (er) {
+          reject(er)
+        } else {
+          resolve(is)
+        }
+      })
+    })
+  }
+
+  core(path, options || {}, function (er, is) {
+    // ignore EACCES because that just means we aren't allowed to run it
+    if (er) {
+      if (er.code === 'EACCES' || options && options.ignoreErrors) {
+        er = null
+        is = false
+      }
+    }
+    cb(er, is)
+  })
+}
+
+function sync (path, options) {
+  // my kingdom for a filtered catch
+  try {
+    return core.sync(path, options || {})
+  } catch (er) {
+    if (options && options.ignoreErrors || er.code === 'EACCES') {
+      return false
+    } else {
+      throw er
+    }
+  }
+}
+
+
+/***/ }),
+
+/***/ 9728:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = isexe
+isexe.sync = sync
+
+var fs = __nccwpck_require__(7147)
+
+function isexe (path, options, cb) {
+  fs.stat(path, function (er, stat) {
+    cb(er, er ? false : checkStat(stat, options))
+  })
+}
+
+function sync (path, options) {
+  return checkStat(fs.statSync(path), options)
+}
+
+function checkStat (stat, options) {
+  return stat.isFile() && checkMode(stat, options)
+}
+
+function checkMode (stat, options) {
+  var mod = stat.mode
+  var uid = stat.uid
+  var gid = stat.gid
+
+  var myUid = options.uid !== undefined ?
+    options.uid : process.getuid && process.getuid()
+  var myGid = options.gid !== undefined ?
+    options.gid : process.getgid && process.getgid()
+
+  var u = parseInt('100', 8)
+  var g = parseInt('010', 8)
+  var o = parseInt('001', 8)
+  var ug = u | g
+
+  var ret = (mod & o) ||
+    (mod & g) && gid === myGid ||
+    (mod & u) && uid === myUid ||
+    (mod & ug) && myUid === 0
+
+  return ret
+}
+
+
+/***/ }),
+
+/***/ 2001:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+module.exports = isexe
+isexe.sync = sync
+
+var fs = __nccwpck_require__(7147)
+
+function checkPathExt (path, options) {
+  var pathext = options.pathExt !== undefined ?
+    options.pathExt : process.env.PATHEXT
+
+  if (!pathext) {
+    return true
+  }
+
+  pathext = pathext.split(';')
+  if (pathext.indexOf('') !== -1) {
+    return true
+  }
+  for (var i = 0; i < pathext.length; i++) {
+    var p = pathext[i].toLowerCase()
+    if (p && path.substr(-p.length).toLowerCase() === p) {
+      return true
+    }
+  }
+  return false
+}
+
+function checkStat (stat, path, options) {
+  if (!stat.isSymbolicLink() && !stat.isFile()) {
+    return false
+  }
+  return checkPathExt(path, options)
+}
+
+function isexe (path, options, cb) {
+  fs.stat(path, function (er, stat) {
+    cb(er, er ? false : checkStat(stat, path, options))
+  })
+}
+
+function sync (path, options) {
+  return checkStat(fs.statSync(path), path, options)
+}
+
+
+/***/ }),
+
+/***/ 5824:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+let events = __nccwpck_require__(2361)
+let fs = __nccwpck_require__(7147)
+let path = __nccwpck_require__(1017)
+
+// const environment = process.env['NODE_ENV'] || 'development'
+
+class devNull {
+    info() { };
+    error() { };
+};
+
+class Tail extends events.EventEmitter {
+
+    constructor(filename, options = {}) {
+        super();
+        this.filename = filename;
+        this.absPath = path.dirname(this.filename);
+        this.separator = (options.separator !== undefined) ? options.separator : /[\r]{0,1}\n/;// null is a valid param
+        this.fsWatchOptions = options.fsWatchOptions || {};
+        this.follow = options['follow'] != undefined ? options['follow'] : true;
+        this.logger = options.logger || new devNull();
+        this.useWatchFile = options.useWatchFile || false;
+        this.flushAtEOF = options.flushAtEOF || false;
+        this.encoding = options.encoding || 'utf-8';
+        const fromBeginning = options.fromBeginning || false;
+        this.nLines = options.nLines || undefined;
+
+        this.logger.info(`Tail starting...`)
+        this.logger.info(`filename: ${this.filename}`);
+        this.logger.info(`encoding: ${this.encoding}`);
+
+        try {
+            fs.accessSync(this.filename, fs.constants.F_OK);
+        } catch (err) {
+            if (err.code == 'ENOENT') {
+                throw err
+            }
+        }
+
+        this.buffer = '';
+        this.internalDispatcher = new events.EventEmitter();
+        this.queue = [];
+        this.isWatching = false;
+        this.pos = 0;
+
+        // this.internalDispatcher.on('next',this.readBlock);
+        this.internalDispatcher.on('next', () => {
+            this.readBlock();
+        });
+
+        let cursor;
+
+        this.logger.info(`fromBeginning: ${fromBeginning}`);
+        if (fromBeginning) {
+            cursor = 0;
+        } else if (this.nLines <= 0) {
+            cursor = 0;
+        } else if (this.nLines !== undefined) {
+            cursor = this.getPositionAtNthLine(this.nLines);
+        } else {
+            cursor = this.latestPosition();
+        }
+
+        if (cursor === undefined) throw new Error("Tail can't initialize.");
+
+        const flush = fromBeginning || (this.nLines != undefined);
+        try {
+            this.watch(cursor, flush);
+        } catch (err) {
+            this.logger.error(`watch for ${this.filename} failed: ${err}`);
+            this.emit("error", `watch for ${this.filename} failed: ${err}`);
+        }
+    }
+
+    /**
+     * Grabs the index of the last line of text in the format /.*(\n)?/.
+     * Returns null if a full line can not be found.
+     * @param {string} text
+     * @returns {number | null}
+     */
+    getIndexOfLastLine(text) {
+
+        /**
+         * Helper function get the last match as string
+         * @param {string} haystack
+         * @param {string | RegExp} needle
+         * @returns {string | undefined}
+         */
+        const getLastMatch = (haystack, needle) => {
+            const matches = haystack.match(needle);
+            if (matches === null) {
+                return;
+            }
+
+            return matches[matches.length - 1];
+        };
+
+        const endSep = getLastMatch(text, this.separator);
+
+        if (!endSep) return null;
+
+        const endSepIndex = text.lastIndexOf(endSep);
+        let lastLine;
+
+        if (text.endsWith(endSep)) {
+            // If the text ends with a separator, look back further to find the next
+            // separator to complete the line
+
+            const trimmed = text.substring(0, endSepIndex);
+            const startSep = getLastMatch(trimmed, this.separator);
+
+            // If there isn't another separator, the line isn't complete so
+            // so return null to get more data
+
+            if (!startSep) {
+                return null;
+            }
+
+            const startSepIndex = trimmed.lastIndexOf(startSep);
+
+            // Exclude the starting separator, include the ending separator
+
+            lastLine = text.substring(
+                startSepIndex + startSep.length,
+                endSepIndex + endSep.length
+            );
+        } else {
+            // If the text does not end with a separator, grab everything after
+            // the last separator
+            lastLine = text.substring(endSepIndex + endSep.length);
+        }
+
+        return text.lastIndexOf(lastLine);
+    }
+
+    /**
+     * Returns the position of the start of the `nLines`th line from the bottom.
+     * Returns 0 if `nLines` is greater than the total number of lines in the file.
+     * @param {number} nLines
+     * @returns {number}
+     */
+    getPositionAtNthLine(nLines) {
+        const { size } = fs.statSync(this.filename);
+
+        if (size === 0) {
+            return 0;
+        }
+        
+        const fd = fs.openSync(this.filename, 'r');
+        // Start from the end of the file and work backwards in specific chunks
+        let currentReadPosition = size;
+        const chunkSizeBytes = Math.min(1024, size);
+        const lineBytes = [];
+
+        let remaining = '';
+
+        while (lineBytes.length < nLines) {
+            // Shift the current read position backward to the amount we're about to read
+            currentReadPosition -= chunkSizeBytes;
+
+            // If negative, we've reached the beginning of the file and we should stop and return 0, starting the
+            // stream at the beginning.
+            if (currentReadPosition < 0) {
+                return 0;
+            }
+
+            // Read a chunk of the file and prepend it to the working buffer
+            const buffer = Buffer.alloc(chunkSizeBytes);
+            const bytesRead = fs.readSync(fd, buffer,
+                0,                  // position in buffer to write to
+                chunkSizeBytes,     // number of bytes to read
+                currentReadPosition // position in file to read from
+            );
+
+            // .subarray returns Uint8Array in node versions < 16.x and Buffer
+            // in versions >= 16.x. To support both, allocate a new buffer with
+            // Buffer.from which accepts both types
+            const readArray = buffer.subarray(0, bytesRead);
+            remaining = Buffer.from(readArray).toString(this.encoding) + remaining;
+
+            let index = this.getIndexOfLastLine(remaining);
+
+            while (index !== null && lineBytes.length < nLines) {
+                const line = remaining.substring(index);
+
+                lineBytes.push(Buffer.byteLength(line));
+                remaining = remaining.substring(0, index);
+
+                index = this.getIndexOfLastLine(remaining);
+            }
+        }
+
+        fs.closeSync(fd);
+
+        return size - lineBytes.reduce((acc, cur) => acc + cur, 0)
+    }
+
+    latestPosition() {
+        try {
+            return fs.statSync(this.filename).size;
+        } catch (err) {
+            this.logger.error(`size check for ${this.filename} failed: ${err}`);
+            this.emit("error", `size check for ${this.filename} failed: ${err}`);
+            throw err;
+        }
+    }
+
+    readBlock() {
+        if (this.queue.length >= 1) {
+            const block = this.queue[0];
+            if (block.end > block.start) {
+                let stream = fs.createReadStream(this.filename, { start: block.start, end: block.end - 1, encoding: this.encoding });
+                stream.on('error', (error) => {
+                    this.logger.error(`Tail error: ${error}`);
+                    this.emit('error', error);
+                });
+                stream.on('end', () => {
+                    let _ = this.queue.shift();
+                    if (this.queue.length > 0) {
+                        this.internalDispatcher.emit('next');
+                    }
+                    if (this.flushAtEOF && this.buffer.length > 0) {
+                        this.emit('line', this.buffer);
+                        this.buffer = "";
+                    }
+                });
+                stream.on('data', (d) => {
+                    if (this.separator === null) {
+                        this.emit("line", d);
+                    } else {
+                        this.buffer += d;
+                        let parts = this.buffer.split(this.separator);
+                        this.buffer = parts.pop();
+                        for (const chunk of parts) {
+                            this.emit("line", chunk);
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    change() {
+        let p = this.latestPosition()
+        if (p < this.currentCursorPos) {//scenario where text is not appended but it's actually a w+
+            this.currentCursorPos = p
+        } else if (p > this.currentCursorPos) {
+            this.queue.push({ start: this.currentCursorPos, end: p });
+            this.currentCursorPos = p
+            if (this.queue.length == 1) {
+                this.internalDispatcher.emit("next");
+            }
+        }
+    }
+
+    watch(startingCursor, flush) {
+        if (this.isWatching) return;
+        this.logger.info(`filesystem.watch present? ${fs.watch != undefined}`);
+        this.logger.info(`useWatchFile: ${this.useWatchFile}`);
+
+        this.isWatching = true;
+        this.currentCursorPos = startingCursor;
+        //force a file flush is either fromBegining or nLines flags were passed.
+        if (flush) this.change();
+
+        if (!this.useWatchFile && fs.watch) {
+            this.logger.info(`watch strategy: watch`);
+            this.watcher = fs.watch(this.filename, this.fsWatchOptions, (e, filename) => { this.watchEvent(e, filename); });
+        } else {
+            this.logger.info(`watch strategy: watchFile`);
+            fs.watchFile(this.filename, this.fsWatchOptions, (curr, prev) => { this.watchFileEvent(curr, prev) });
+        }
+    }
+
+    rename(filename) {
+        //TODO
+        //MacOS sometimes throws a rename event for no reason.
+        //Different platforms might behave differently.
+        //see https://nodejs.org/api/fs.html#fs_fs_watch_filename_options_listener
+        //filename might not be present.
+        //https://nodejs.org/api/fs.html#fs_filename_argument
+        //Better solution would be check inode but it will require a timeout and
+        // a sync file read.
+        if (filename === undefined || filename !== this.filename) {
+            this.unwatch();
+            if (this.follow) {
+                this.filename = path.join(this.absPath, filename);
+                this.rewatchId = setTimeout((() => {
+                    try {
+                        this.watch(this.currentCursorPos);
+                    } catch (ex) {
+                        this.logger.error(`'rename' event for ${this.filename}. File not available anymore.`);
+                        this.emit("error", ex);
+                    }
+                }), 1000);
+            } else {
+                this.logger.error(`'rename' event for ${this.filename}. File not available anymore.`);
+                this.emit("error", `'rename' event for ${this.filename}. File not available anymore.`);
+            }
+        } else {
+            // this.logger.info("rename event but same filename")
+        }
+    }
+
+    watchEvent(e, evtFilename) {
+        try {
+            if (e === 'change') {
+                this.change();
+            } else if (e === 'rename') {
+                this.rename(evtFilename);
+            }
+        } catch (err) {
+            this.logger.error(`watchEvent for ${this.filename} failed: ${err}`);
+            this.emit("error", `watchEvent for ${this.filename} failed: ${err}`);
+        }
+    }
+
+    watchFileEvent(curr, prev) {
+        if (curr.size > prev.size) {
+            this.currentCursorPos = curr.size;    //Update this.currentCursorPos so that a consumer can determine if entire file has been handled
+            this.queue.push({ start: prev.size, end: curr.size });
+            if (this.queue.length == 1) {
+                this.internalDispatcher.emit("next");
+            }
+        }
+    }
+
+    unwatch() {
+        if (this.watcher) {
+            this.watcher.close();
+        } else {
+            fs.unwatchFile(this.filename);
+        }
+        if (this.rewatchId) {
+            clearTimeout(this.rewatchId);
+            this.rewatchId = undefined;
+        }
+        this.isWatching = false;
+        this.queue = [];// TODO: is this correct behaviour?
+        if (this.logger) {
+            this.logger.info(`Unwatch ${this.filename}`);
+        }
+    }
+
+}
+
+exports.Tail = Tail
+
+
+/***/ }),
+
 /***/ 4294:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -3958,7 +4473,7 @@ exports["default"] = _default;
 /***/ 6143:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const { isexe, sync: isexeSync } = __nccwpck_require__(5200)
+const isexe = __nccwpck_require__(7126)
 const { join, delimiter, sep, posix } = __nccwpck_require__(1017)
 
 const isWindows = process.platform === 'win32'
@@ -3991,7 +4506,11 @@ const getPathInfo = (cmd, {
   if (isWindows) {
     const pathExtExe = optPathExt ||
       ['.EXE', '.CMD', '.BAT', '.COM'].join(optDelimiter)
-    const pathExt = pathExtExe.split(optDelimiter).flatMap((item) => [item, item.toLowerCase()])
+    const pathExt = pathExtExe.split(optDelimiter).reduce((acc, item) => {
+      acc.push(item)
+      acc.push(item.toLowerCase())
+      return acc
+    }, [])
     if (cmd.includes('.') && pathExt[0] !== '') {
       pathExt.unshift('')
     }
@@ -4046,7 +4565,7 @@ const whichSync = (cmd, opt = {}) => {
 
     for (const ext of pathExt) {
       const withExt = p + ext
-      const is = isexeSync(withExt, { pathExt: pathExtExe, ignoreErrors: true })
+      const is = isexe.sync(withExt, { pathExt: pathExtExe, ignoreErrors: true })
       if (is) {
         if (!opt.all) {
           return withExt
@@ -4105,11 +4624,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.IsPost = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
+const node_child_process_1 = __nccwpck_require__(7718);
+const fs = __importStar(__nccwpck_require__(3977));
+const os = __importStar(__nccwpck_require__(612));
+const path = __importStar(__nccwpck_require__(9411));
+const tail_1 = __nccwpck_require__(5824);
 const which_1 = __importDefault(__nccwpck_require__(6143));
-exports.IsPost = !!process.env['STATE_isPost'];
 // inputs
 const name = core.getInput('name', { required: true });
 const extraPullNames = core.getInput('extraPullNames');
@@ -4119,9 +4641,11 @@ const skipPush = core.getInput('skipPush');
 const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
-const installCommand = core.getInput('installCommand') ||
+const installCommand = core.getInput('installCommand') ??
     "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
 const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
+const useDaemon = (core.getInput('useDaemon') === 'true') ? true : false;
+const ENV_CACHIX_DAEMON_DIR = 'CACHIX_DAEMON_DIR';
 async function setup() {
     try {
         if (!which_1.default.sync('cachix', { nothrow: true })) {
@@ -4156,8 +4680,54 @@ async function setup() {
         if (signingKey !== "") {
             core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
         }
-        // Remember existing store paths
-        await exec.exec("sh", ["-c", `${__dirname}/list-nix-store.sh > /tmp/store-path-pre-build`]);
+        if (useDaemon) {
+            const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
+            const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
+            const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
+            const daemon = (0, node_child_process_1.spawn)('cachix', [
+                'daemon', 'run',
+                '--socket', `${daemonDir}/daemon.sock`,
+            ], {
+                stdio: ['ignore', daemonLog.fd, daemonLog.fd],
+                detached: true,
+            });
+            if (daemon.pid !== undefined) {
+                await fs.writeFile(`${daemonDir}/daemon.pid`, daemon.pid.toString());
+            }
+            const cachix = which_1.default.sync('cachix');
+            core.debug(`Found cachix executable: ${cachix}`);
+            const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
+            await fs.writeFile(postBuildHookScriptPath, `
+        #!/bin/sh
+
+        set -eu
+        set -x # remove in production
+        set -f # disable globbing
+        export IFS=''
+
+        exec ${cachix} daemon push \
+          --socket ${daemonDir}/daemon.sock \
+          ${name} $OUT_PATHS
+        `, 
+            // Make the post-build-hook executable
+            { mode: 0o755 });
+            core.debug(`Wrote post-build-hook script to ${postBuildHookScriptPath}`);
+            const postBuildHookConfigPath = `${daemonDir}/nix.conf`;
+            await fs.writeFile(postBuildHookConfigPath, `post-build-hook = ${postBuildHookScriptPath}`);
+            core.debug(`Wrote post-build-hook nix config to ${postBuildHookConfigPath}`);
+            // Register the post-build-hook
+            let userConfFiles = process.env['NIX_USER_CONF_FILES'] ?? '';
+            core.exportVariable('NIX_USER_CONF_FILES', [userConfFiles, postBuildHookConfigPath].filter((x) => x !== '').join(':'));
+            core.debug(`Registered post-build-hook nix config in NIX_USER_CONF_FILES=${process.env['NIX_USER_CONF_FILES']}`);
+            // Expose the daemon directory for the post action hook
+            core.exportVariable(ENV_CACHIX_DAEMON_DIR, daemonDir);
+            // Detach the daemon process from the current process
+            daemon.unref();
+        }
+        else {
+            // Remember existing store paths
+            await exec.exec("sh", ["-c", `${__dirname}/list-nix-store.sh > /tmp/store-path-pre-build`]);
+        }
     }
     catch (error) {
         core.setFailed(`Action failed with error: ${error}`);
@@ -4170,7 +4740,22 @@ async function upload() {
             core.info('Pushing is disabled as skipPush is set to true');
         }
         else if (signingKey !== "" || authToken !== "") {
-            await exec.exec(`${__dirname}/push-paths.sh`, ['cachix', cachixArgs, name, pathsToPush, pushFilter]);
+            if (useDaemon) {
+                const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
+                const daemonPid = parseInt(await fs.readFile(`${daemonDir}/daemon.pid`, 'utf8'));
+                core.debug(`Found Cachix daemon with pid ${daemonPid}`);
+                let daemonLog = new tail_1.Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
+                daemonLog.on('line', (line) => core.info(line));
+                // Can't use the socket because we currently close it before the daemon exits
+                core.debug('Waiting for Cachix daemon to exit...');
+                await exec.exec("cachix", ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
+                // Wait a bit for the logs to flush through
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                daemonLog.unwatch();
+            }
+            else {
+                await exec.exec(`${__dirname}/push-paths.sh`, ['cachix', cachixArgs, name, pathsToPush, pushFilter]);
+            }
         }
         else {
             core.info('Pushing is disabled as signingKey nor authToken are set (or are empty?) in your YAML file.');
@@ -4181,12 +4766,14 @@ async function upload() {
     }
     core.endGroup();
 }
+const isPost = !!process.env['STATE_isPost'];
 // Main
-if (!exports.IsPost) {
+if (!isPost) {
     // Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
     // This is necessary since we don't have a separate entry point.
     core.saveState('isPost', 'true');
     setup();
+    core.debug('Setup done');
 }
 else {
     // Post
@@ -4236,14 +4823,6 @@ module.exports = require("fs");
 
 /***/ }),
 
-/***/ 3292:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("fs/promises");
-
-/***/ }),
-
 /***/ 3685:
 /***/ ((module) => {
 
@@ -4265,6 +4844,38 @@ module.exports = require("https");
 
 "use strict";
 module.exports = require("net");
+
+/***/ }),
+
+/***/ 7718:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:child_process");
+
+/***/ }),
+
+/***/ 3977:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:fs/promises");
+
+/***/ }),
+
+/***/ 612:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:os");
+
+/***/ }),
+
+/***/ 9411:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
 
 /***/ }),
 
@@ -4313,212 +4924,6 @@ module.exports = require("tls");
 
 "use strict";
 module.exports = require("util");
-
-/***/ }),
-
-/***/ 5200:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sync = exports.isexe = exports.posix = exports.win32 = void 0;
-const posix = __importStar(__nccwpck_require__(5523));
-exports.posix = posix;
-const win32 = __importStar(__nccwpck_require__(4323));
-exports.win32 = win32;
-__exportStar(__nccwpck_require__(7252), exports);
-const platform = process.env._ISEXE_TEST_PLATFORM_ || process.platform;
-const impl = platform === 'win32' ? win32 : posix;
-/**
- * Determine whether a path is executable on the current platform.
- */
-exports.isexe = impl.isexe;
-/**
- * Synchronously determine whether a path is executable on the
- * current platform.
- */
-exports.sync = impl.sync;
-//# sourceMappingURL=index.js.map
-
-/***/ }),
-
-/***/ 7252:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-//# sourceMappingURL=options.js.map
-
-/***/ }),
-
-/***/ 5523:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-/**
- * This is the Posix implementation of isexe, which uses the file
- * mode and uid/gid values.
- *
- * @module
- */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sync = exports.isexe = void 0;
-const fs_1 = __nccwpck_require__(7147);
-const promises_1 = __nccwpck_require__(3292);
-/**
- * Determine whether a path is executable according to the mode and
- * current (or specified) user and group IDs.
- */
-const isexe = async (path, options = {}) => {
-    const { ignoreErrors = false } = options;
-    try {
-        return checkStat(await (0, promises_1.stat)(path), options);
-    }
-    catch (e) {
-        const er = e;
-        if (ignoreErrors || er.code === 'EACCES')
-            return false;
-        throw er;
-    }
-};
-exports.isexe = isexe;
-/**
- * Synchronously determine whether a path is executable according to
- * the mode and current (or specified) user and group IDs.
- */
-const sync = (path, options = {}) => {
-    const { ignoreErrors = false } = options;
-    try {
-        return checkStat((0, fs_1.statSync)(path), options);
-    }
-    catch (e) {
-        const er = e;
-        if (ignoreErrors || er.code === 'EACCES')
-            return false;
-        throw er;
-    }
-};
-exports.sync = sync;
-const checkStat = (stat, options) => stat.isFile() && checkMode(stat, options);
-const checkMode = (stat, options) => {
-    const myUid = options.uid ?? process.getuid?.();
-    const myGroups = options.groups ?? process.getgroups?.() ?? [];
-    const myGid = options.gid ?? process.getgid?.() ?? myGroups[0];
-    if (myUid === undefined || myGid === undefined) {
-        throw new Error('cannot get uid or gid');
-    }
-    const groups = new Set([myGid, ...myGroups]);
-    const mod = stat.mode;
-    const uid = stat.uid;
-    const gid = stat.gid;
-    const u = parseInt('100', 8);
-    const g = parseInt('010', 8);
-    const o = parseInt('001', 8);
-    const ug = u | g;
-    return !!(mod & o ||
-        (mod & g && groups.has(gid)) ||
-        (mod & u && uid === myUid) ||
-        (mod & ug && myUid === 0));
-};
-//# sourceMappingURL=posix.js.map
-
-/***/ }),
-
-/***/ 4323:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-/**
- * This is the Windows implementation of isexe, which uses the file
- * extension and PATHEXT setting.
- *
- * @module
- */
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.sync = exports.isexe = void 0;
-const fs_1 = __nccwpck_require__(7147);
-const promises_1 = __nccwpck_require__(3292);
-/**
- * Determine whether a path is executable based on the file extension
- * and PATHEXT environment variable (or specified pathExt option)
- */
-const isexe = async (path, options = {}) => {
-    const { ignoreErrors = false } = options;
-    try {
-        return checkStat(await (0, promises_1.stat)(path), path, options);
-    }
-    catch (e) {
-        const er = e;
-        if (ignoreErrors || er.code === 'EACCES')
-            return false;
-        throw er;
-    }
-};
-exports.isexe = isexe;
-/**
- * Synchronously determine whether a path is executable based on the file
- * extension and PATHEXT environment variable (or specified pathExt option)
- */
-const sync = (path, options = {}) => {
-    const { ignoreErrors = false } = options;
-    try {
-        return checkStat((0, fs_1.statSync)(path), path, options);
-    }
-    catch (e) {
-        const er = e;
-        if (ignoreErrors || er.code === 'EACCES')
-            return false;
-        throw er;
-    }
-};
-exports.sync = sync;
-const checkPathExt = (path, options) => {
-    const { pathExt = process.env.PATHEXT || '' } = options;
-    const peSplit = pathExt.split(';');
-    if (peSplit.indexOf('') !== -1) {
-        return true;
-    }
-    for (let i = 0; i < peSplit.length; i++) {
-        const p = peSplit[i].toLowerCase();
-        const ext = path.substring(path.length - p.length).toLowerCase();
-        if (p && ext === p) {
-            return true;
-        }
-    }
-    return false;
-};
-const checkStat = (stat, path, options) => stat.isFile() && checkPathExt(path, options);
-//# sourceMappingURL=win32.js.map
 
 /***/ })
 
