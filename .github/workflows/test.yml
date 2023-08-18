@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+env:
+  ACTIONS_STEP_DEBUG: true
+
 jobs:
   public-cache:
     strategy:
@@ -99,3 +102,26 @@ jobs:
         name: cachix-action
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
     - run: nix-build test.nix
+
+  daemon-public-cache:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v22
+    - run: nix profile install nixpkgs#yarn
+    - run: yarn install --frozen-lockfile
+    - run: yarn build
+    # check if typescript generation was committed
+    - run: git diff --exit-code
+    - name: Test public cache
+      uses: ./
+      with:
+        name: cachix-action
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+        installCommand: nix profile install github:cachix/cachix/feature/daemon --accept-flake-config
+        useDaemon: true
+    - run: nix-build test.nix
+
