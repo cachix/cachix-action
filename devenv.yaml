@@ -1,0 +1,6 @@
+inputs:
+  nixpkgs:
+    url: github:NixOS/nixpkgs/nixpkgs-unstable
+permittedInsecurePackages:
+  - nodejs-16.20.2
+
