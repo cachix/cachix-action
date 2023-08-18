@@ -4116,128 +4116,118 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 207:
+/***/ 143:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const isWindows = process.platform === 'win32' ||
-    process.env.OSTYPE === 'cygwin' ||
-    process.env.OSTYPE === 'msys'
-
-const path = __nccwpck_require__(17)
-const COLON = isWindows ? ';' : ':'
 const isexe = __nccwpck_require__(126)
+const { join, delimiter, sep, posix } = __nccwpck_require__(17)
+
+const isWindows = process.platform === 'win32'
+
+// used to check for slashed in commands passed in. always checks for the posix
+// seperator on all platforms, and checks for the current separator when not on
+// a posix platform. don't use the isWindows check for this since that is mocked
+// in tests but we still need the code to actually work when called. that is also
+// why it is ignored from coverage.
+/* istanbul ignore next */
+const rSlash = new RegExp(`[${posix.sep}${sep === posix.sep ? '' : sep}]`.replace(/(\\)/g, '\\$1'))
+const rRel = new RegExp(`^\\.${rSlash.source}`)
 
 const getNotFoundError = (cmd) =>
   Object.assign(new Error(`not found: ${cmd}`), { code: 'ENOENT' })
 
-const getPathInfo = (cmd, opt) => {
-  const colon = opt.colon || COLON
-
+const getPathInfo = (cmd, {
+  path: optPath = process.env.PATH,
+  pathExt: optPathExt = process.env.PATHEXT,
+  delimiter: optDelimiter = delimiter,
+}) => {
   // If it has a slash, then we don't bother searching the pathenv.
   // just check the file itself, and that's it.
-  const pathEnv = cmd.match(/\//) || isWindows && cmd.match(/\\/) ? ['']
-    : (
-      [
-        // windows always checks the cwd first
-        ...(isWindows ? [process.cwd()] : []),
-        ...(opt.path || process.env.PATH ||
-          /* istanbul ignore next: very unusual */ '').split(colon),
-      ]
-    )
-  const pathExtExe = isWindows
-    ? opt.pathExt || process.env.PATHEXT || '.EXE;.CMD;.BAT;.COM'
-    : ''
-  const pathExt = isWindows ? pathExtExe.split(colon) : ['']
+  const pathEnv = cmd.match(rSlash) ? [''] : [
+    // windows always checks the cwd first
+    ...(isWindows ? [process.cwd()] : []),
+    ...(optPath || /* istanbul ignore next: very unusual */ '').split(optDelimiter),
+  ]
 
   if (isWindows) {
-    if (cmd.indexOf('.') !== -1 && pathExt[0] !== '')
+    const pathExtExe = optPathExt ||
+      ['.EXE', '.CMD', '.BAT', '.COM'].join(optDelimiter)
+    const pathExt = pathExtExe.split(optDelimiter).reduce((acc, item) => {
+      acc.push(item)
+      acc.push(item.toLowerCase())
+      return acc
+    }, [])
+    if (cmd.includes('.') && pathExt[0] !== '') {
       pathExt.unshift('')
+    }
+    return { pathEnv, pathExt, pathExtExe }
   }
 
-  return {
-    pathEnv,
-    pathExt,
-    pathExtExe,
-  }
+  return { pathEnv, pathExt: [''] }
 }
 
-const which = (cmd, opt, cb) => {
-  if (typeof opt === 'function') {
-    cb = opt
-    opt = {}
-  }
-  if (!opt)
-    opt = {}
+const getPathPart = (raw, cmd) => {
+  const pathPart = /^".*"$/.test(raw) ? raw.slice(1, -1) : raw
+  const prefix = !pathPart && rRel.test(cmd) ? cmd.slice(0, 2) : ''
+  return prefix + join(pathPart, cmd)
+}
 
+const which = async (cmd, opt = {}) => {
   const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt)
   const found = []
 
-  const step = i => new Promise((resolve, reject) => {
-    if (i === pathEnv.length)
-      return opt.all && found.length ? resolve(found)
-        : reject(getNotFoundError(cmd))
+  for (const envPart of pathEnv) {
+    const p = getPathPart(envPart, cmd)
 
-    const ppRaw = pathEnv[i]
-    const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw
-
-    const pCmd = path.join(pathPart, cmd)
-    const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd
-      : pCmd
-
-    resolve(subStep(p, i, 0))
-  })
-
-  const subStep = (p, i, ii) => new Promise((resolve, reject) => {
-    if (ii === pathExt.length)
-      return resolve(step(i + 1))
-    const ext = pathExt[ii]
-    isexe(p + ext, { pathExt: pathExtExe }, (er, is) => {
-      if (!er && is) {
-        if (opt.all)
-          found.push(p + ext)
-        else
-          return resolve(p + ext)
-      }
-      return resolve(subStep(p, i, ii + 1))
-    })
-  })
-
-  return cb ? step(0).then(res => cb(null, res), cb) : step(0)
-}
-
-const whichSync = (cmd, opt) => {
-  opt = opt || {}
-
-  const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt)
-  const found = []
-
-  for (let i = 0; i < pathEnv.length; i ++) {
-    const ppRaw = pathEnv[i]
-    const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw
-
-    const pCmd = path.join(pathPart, cmd)
-    const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd
-      : pCmd
-
-    for (let j = 0; j < pathExt.length; j ++) {
-      const cur = p + pathExt[j]
-      try {
-        const is = isexe.sync(cur, { pathExt: pathExtExe })
-        if (is) {
-          if (opt.all)
-            found.push(cur)
-          else
-            return cur
+    for (const ext of pathExt) {
+      const withExt = p + ext
+      const is = await isexe(withExt, { pathExt: pathExtExe, ignoreErrors: true })
+      if (is) {
+        if (!opt.all) {
+          return withExt
         }
-      } catch (ex) {}
+        found.push(withExt)
+      }
     }
   }
 
-  if (opt.all && found.length)
+  if (opt.all && found.length) {
     return found
+  }
 
-  if (opt.nothrow)
+  if (opt.nothrow) {
     return null
+  }
+
+  throw getNotFoundError(cmd)
+}
+
+const whichSync = (cmd, opt = {}) => {
+  const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt)
+  const found = []
+
+  for (const pathEnvPart of pathEnv) {
+    const p = getPathPart(pathEnvPart, cmd)
+
+    for (const ext of pathExt) {
+      const withExt = p + ext
+      const is = isexe.sync(withExt, { pathExt: pathExtExe, ignoreErrors: true })
+      if (is) {
+        if (!opt.all) {
+          return withExt
+        }
+        found.push(withExt)
+      }
+    }
+  }
+
+  if (opt.all && found.length) {
+    return found
+  }
+
+  if (opt.nothrow) {
+    return null
+  }
 
   throw getNotFoundError(cmd)
 }
@@ -4255,7 +4245,11 @@ which.sync = whichSync
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -4268,7 +4262,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
     __setModuleDefault(result, mod);
     return result;
 };
@@ -4288,7 +4282,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IsPost = void 0;
 const core = __importStar(__nccwpck_require__(186));
 const exec = __importStar(__nccwpck_require__(514));
-const which_1 = __importDefault(__nccwpck_require__(207));
+const which_1 = __importDefault(__nccwpck_require__(143));
 exports.IsPost = !!process.env['STATE_isPost'];
 // inputs
 const name = core.getInput('name', { required: true });
