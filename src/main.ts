@@ -17,7 +17,7 @@ const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
 const installCommand =
-  core.getInput('installCommand') ||
+  core.getInput('installCommand') ??
   "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
 const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
 const useDaemon = (core.getInput('useDaemon') === 'true') ? true : false;
@@ -64,7 +64,7 @@ async function setup() {
     }
 
     if (useDaemon) {
-      const tmpdir = process.env['RUNNER_TEMP'] || os.tmpdir();
+      const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
       const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
       const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
 
@@ -87,34 +87,41 @@ async function setup() {
       const cachix = which.sync('cachix');
       core.debug(`Found cachix executable: ${cachix}`);
 
-      const postBuildHookPath = `${daemonDir}/cachix-post-build-hook.sh`;
-      await fs.writeFile(postBuildHookPath, `
-      #!/bin/sh
+      const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
+      await fs.writeFile(postBuildHookScriptPath, `
+        #!/bin/sh
 
-      set -eu
-      set -x # remove in production
-      set -f # disable globbing
-      export IFS=''
+        set -eu
+        set -x # remove in production
+        set -f # disable globbing
+        export IFS=''
 
-      exec ${cachix} daemon push \
-        --socket ${daemonDir}/daemon.sock \
-        ${name} $OUT_PATHS
-     `);
+        exec ${cachix} daemon push \
+          --socket ${daemonDir}/daemon.sock \
+          ${name} $OUT_PATHS
+        `,
+        // Make the post-build-hook executable
+        { mode: 0o755 }
+      );
+      core.debug(`Wrote post-build-hook script to ${postBuildHookScriptPath}`);
 
-      // Make the post-build-hook executable
-      fs.chmod(postBuildHookPath, 0o755);
+      const postBuildHookConfigPath = `${daemonDir}/nix.conf`;
+      await fs.writeFile(
+        postBuildHookConfigPath,
+        `post-build-hook = ${postBuildHookScriptPath}`
+      );
+      core.debug(`Wrote post-build-hook nix config to ${postBuildHookConfigPath}`);
 
       // Register the post-build-hook
-      await fs.mkdir(`${process.env['HOME']}/.config/nix`, { recursive: true });
-      const nixConf = await fs.open(`${process.env['HOME']}/.config/nix/nix.conf`, 'a');
-      fs.writeFile(nixConf, `
-      post-build-hook = ${postBuildHookPath}
-      `);
-      await nixConf.close();
+      let userConfFiles = process.env['NIX_USER_CONF_FILES'] ?? '';
+      core.exportVariable(
+        'NIX_USER_CONF_FILES',
+        [userConfFiles, postBuildHookConfigPath].filter((x) => x !== '').join(':')
+      );
+      core.debug(`Registered post-build-hook nix config in NIX_USER_CONF_FILES=${process.env['NIX_USER_CONF_FILES']}`);
 
+      // Expose the daemon directory for the post action hook
       core.exportVariable(ENV_CACHIX_DAEMON_DIR, daemonDir);
-
-      core.debug(`Cachix daemon started with pid ${daemon.pid}`)
 
       // Detach the daemon process from the current process
       daemon.unref();
