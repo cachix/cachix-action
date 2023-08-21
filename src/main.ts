@@ -87,7 +87,7 @@ async function setup() {
       if (typeof daemon.pid === 'number') {
         const pid = daemon.pid.toString();
         core.debug(`Spawned Cachix Daemon with PID: ${pid}`);
-        await fs.writeFile(`${daemonDir}/daemon.pid`, pid);
+        await fs.writeFile(pidFilePath(daemonDir), pid);
       } else {
         core.error('Failed to spawn Cachix Daemon');
         return;
@@ -158,8 +158,7 @@ async function upload() {
           return;
         }
 
-        const daemonPidPath = path.join(daemonDir, 'daemon.pid');
-        const daemonPid = parseInt(await fs.readFile(daemonPidPath, { encoding: 'utf8' }));
+        const daemonPid = parseInt(await fs.readFile(pidFilePath(daemonDir), { encoding: 'utf8' }));
 
         if (!daemonPid) {
           core.error('Failed to find PID of Cachix Daemon. Skipping push.');
@@ -192,7 +191,11 @@ async function upload() {
   core.endGroup();
 }
 
-const isPost = !!process.env['STATE_isPost']
+function pidFilePath(daemonDir: string) {
+  return path.join(daemonDir, 'daemon.pid');
+}
+
+const isPost = !!core.getState('isPost');
 
 // Main
 if (!isPost) {
