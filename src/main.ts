@@ -85,12 +85,13 @@ async function setup() {
       });
 
       if (typeof daemon.pid === 'number') {
-        await fs.writeFile(`${daemonDir}/daemon.pid`, daemon.pid.toString());
+        const pid = daemon.pid.toString();
+        core.debug(`Spawned Cachix Daemon with PID: ${pid}`);
+        await fs.writeFile(`${daemonDir}/daemon.pid`, pid);
       } else {
         core.error('Failed to spawn Cachix Daemon');
         return;
       }
-
 
       const cachix = which.sync('cachix');
       core.debug(`Found cachix executable: ${cachix}`);
