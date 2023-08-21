@@ -4705,6 +4705,7 @@ async function setup() {
             }
             const cachix = which_1.default.sync('cachix');
             core.debug(`Found cachix executable: ${cachix}`);
+            core.saveState('cachix', cachix);
             const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
             await fs.writeFile(postBuildHookScriptPath, `
         #!/bin/sh
@@ -4764,8 +4765,9 @@ async function upload() {
                 let daemonLog = new tail_1.Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
                 daemonLog.on('line', (line) => core.info(line));
                 try {
+                    const cachix = core.getState('cachix');
                     core.debug('Waiting for Cachix daemon to exit...');
-                    await exec.exec("cachix", ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
+                    await exec.exec(cachix, ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
                 }
                 finally {
                     // Wait a bit for the logs to flush through

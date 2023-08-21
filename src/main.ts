@@ -95,6 +95,7 @@ async function setup() {
 
       const cachix = which.sync('cachix');
       core.debug(`Found cachix executable: ${cachix}`);
+      core.saveState('cachix', cachix);
 
       const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
       await fs.writeFile(postBuildHookScriptPath, `
@@ -171,8 +172,9 @@ async function upload() {
         daemonLog.on('line', (line) => core.info(line));
 
         try {
+          const cachix = core.getState('cachix');
           core.debug('Waiting for Cachix daemon to exit...');
-          await exec.exec("cachix", ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
+          await exec.exec(cachix, ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
         } finally {
           // Wait a bit for the logs to flush through
           await new Promise((resolve) => setTimeout(resolve, 1000));
