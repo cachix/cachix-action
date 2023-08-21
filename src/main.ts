@@ -80,9 +80,17 @@ async function setup() {
         }
       );
 
-      if (daemon.pid !== undefined) {
+      daemon.on('error', (err) => {
+        core.error(`Cachix Daemon failed: ${err}`);
+      });
+
+      if (typeof daemon.pid === 'number') {
         await fs.writeFile(`${daemonDir}/daemon.pid`, daemon.pid.toString());
+      } else {
+        core.error('Failed to spawn Cachix Daemon');
+        return;
       }
+
 
       const cachix = which.sync('cachix');
       core.debug(`Found cachix executable: ${cachix}`);
@@ -143,7 +151,20 @@ async function upload() {
     } else if (signingKey !== "" || authToken !== "") {
       if (useDaemon) {
         const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
-        const daemonPid = parseInt(await fs.readFile(`${daemonDir}/daemon.pid`, 'utf8'));
+
+        if (!daemonDir) {
+          core.debug('Cachix Daemon not started. Skipping push');
+          return;
+        }
+
+        const daemonPidPath = path.join(daemonDir, 'daemon.pid');
+        const daemonPid = parseInt(await fs.readFile(daemonPidPath, { encoding: 'utf8' }));
+
+        if (!daemonPid) {
+          core.error('Failed to find PID of Cachix Daemon. Skipping push.');
+          return;
+        }
+
         core.debug(`Found Cachix daemon with pid ${daemonPid}`);
 
         let daemonLog = new Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
