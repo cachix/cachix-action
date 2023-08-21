@@ -170,14 +170,14 @@ async function upload() {
         let daemonLog = new Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
         daemonLog.on('line', (line) => core.info(line));
 
-        // Can't use the socket because we currently close it before the daemon exits
-        core.debug('Waiting for Cachix daemon to exit...');
-        await exec.exec("cachix", ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
-
-        // Wait a bit for the logs to flush through
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        daemonLog.unwatch();
+        try {
+          core.debug('Waiting for Cachix daemon to exit...');
+          await exec.exec("cachix", ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
+        } finally {
+          // Wait a bit for the logs to flush through
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          daemonLog.unwatch();
+        }
       } else {
         await exec.exec(`${__dirname}/push-paths.sh`, ['cachix', cachixArgs, name, pathsToPush, pushFilter]);
       }
