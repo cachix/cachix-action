@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 let
-  node = pkgs.nodejs_16;
+  node = pkgs.nodejs_20;
 in
 {
   packages = [

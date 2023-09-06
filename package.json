@@ -22,7 +22,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",
-    "which": "^3.0.1"
+    "which": "^4.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",
