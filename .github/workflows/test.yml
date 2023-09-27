@@ -22,6 +22,7 @@ jobs:
       uses: ./
       with:
         name: cachix-action
+        installCommand: nix-env -if https://github.com/cachix/cachix/tarball/master --substituters 'https://cache.nixos.org https://cachix.cachix.org' --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
     - run: nix-build test.nix
 
@@ -39,6 +40,7 @@ jobs:
       uses: ./
       with:
         name: cachix-action
+        installCommand: nix-env -if https://github.com/cachix/cachix/tarball/master --substituters 'https://cache.nixos.org https://cachix.cachix.org' --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
     - run: nix-build test.nix
 
   private-cache:
@@ -56,6 +58,7 @@ jobs:
       uses: ./
       with:
         name: cachix-action-private
+        installCommand: nix-env -if https://github.com/cachix/cachix/tarball/master --substituters 'https://cache.nixos.org https://cachix.cachix.org' --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}'
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
     - run: nix-build test.nix
@@ -74,8 +77,8 @@ jobs:
       uses: ./
       with:
         name: cachix-action
+        installCommand: nix-env -if https://github.com/cachix/cachix/tarball/master --substituters 'https://cache.nixos.org https://cachix.cachix.org' --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        installCommand: 'nix-env -j8 -f https://cachix.org/api/v1/install -iA cachix'
     - run: nix-build test.nix
 
   nix-master:
@@ -97,5 +100,6 @@ jobs:
       uses: ./
       with:
         name: cachix-action
+        installCommand: nix-env -if https://github.com/cachix/cachix/tarball/master --substituters 'https://cache.nixos.org https://cachix.cachix.org' --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
     - run: nix-build test.nix
