@@ -17,7 +17,7 @@ const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
 const installCommand =
-  core.getInput('installCommand') ??
+  core.getInput('installCommand') ||
   "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
 const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
 const useDaemon = (core.getInput('useDaemon') === 'true') ? true : false;
