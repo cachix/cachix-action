@@ -121,7 +121,7 @@ jobs:
       with:
         name: cachix-action
         signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        installCommand: nix profile install github:cachix/cachix/feature/daemon --accept-flake-config
+        installCommand: nix profile install github:cachix/cachix/316da07b05201376c6c29c9f0e7ce3011ab4c256 --accept-flake-config
         useDaemon: true
     - run: nix-build test.nix
 
