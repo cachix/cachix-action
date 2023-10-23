@@ -16,36 +16,55 @@ const skipPush = core.getInput('skipPush');
 const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
+const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
+const useDaemon = (core.getInput('useDaemon') === 'true') ? true : false;
+const cachixBinInput = core.getInput('cachixBin');
 const installCommand =
   core.getInput('installCommand') ||
   "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
-const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
-const useDaemon = (core.getInput('useDaemon') === 'true') ? true : false;
 
 const ENV_CACHIX_DAEMON_DIR = 'CACHIX_DAEMON_DIR';
 
 async function setup() {
   try {
-    if (!which.sync('cachix', { nothrow: true })) {
-      core.startGroup('Cachix: installing')
-      await exec.exec('bash', ['-c', installCommand]);
-      core.endGroup()
+    let cachixBin = cachixBinInput;
+
+    if (cachixBin !== "") {
+      core.debug(`Using Cachix executable from input: ${cachixBin}`);
+    } else {
+      // Find the Cachix executable in PATH
+      let resolvedCachixBin = which.sync('cachix', { nothrow: true });
+
+      if (resolvedCachixBin) {
+        core.debug(`Found Cachix executable: ${cachixBin}`);
+        cachixBin = resolvedCachixBin;
+      } else {
+        core.startGroup('Cachix: installing')
+        await exec.exec('bash', ['-c', installCommand]);
+        cachixBin = which.sync('cachix');
+        core.debug(`Installed Cachix executable: ${cachixBin}`);
+        core.endGroup()
+      }
     }
 
+    core.saveState('cachixBin', cachixBin);
+
+    // Print the executable version.
+    // Also verifies that the binary exists and is executable.
     core.startGroup('Cachix: checking version')
-    await exec.exec('cachix', ['--version']);
+    await exec.exec(cachixBin, ['--version']);
     core.endGroup()
 
     // for managed signing key and private caches
     if (authToken !== "") {
-      await exec.exec('cachix', ['authtoken', authToken]);
+      await exec.exec(cachixBin, ['authtoken', authToken]);
     }
 
     if (skipAddingSubstituter === 'true') {
       core.info('Not adding Cachix cache to substituters as skipAddingSubstituter is set to true')
     } else {
       core.startGroup(`Cachix: using cache ` + name);
-      await exec.exec('cachix', ['use', name]);
+      await exec.exec(cachixBin, ['use', name]);
       core.endGroup();
     }
 
@@ -54,7 +73,7 @@ async function setup() {
       const extraPullNameList = extraPullNames.split(',');
       for (let itemName of extraPullNameList) {
         const trimmedItemName = itemName.trim();
-        await exec.exec('cachix', ['use', trimmedItemName]);
+        await exec.exec(cachixBin, ['use', trimmedItemName]);
       }
       core.endGroup();
     }
@@ -69,7 +88,7 @@ async function setup() {
       const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
 
       const daemon = spawn(
-        'cachix',
+        cachixBin,
         [
           'daemon', 'run',
           '--socket', `${daemonDir}/daemon.sock`,
@@ -93,10 +112,6 @@ async function setup() {
         return;
       }
 
-      const cachix = which.sync('cachix');
-      core.debug(`Found cachix executable: ${cachix}`);
-      core.saveState('cachix', cachix);
-
       const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
       await fs.writeFile(postBuildHookScriptPath, `
         #!/bin/sh
@@ -106,7 +121,7 @@ async function setup() {
         set -f # disable globbing
         export IFS=''
 
-        exec ${cachix} daemon push \
+        exec ${cachixBin} daemon push \
           --socket ${daemonDir}/daemon.sock \
           ${name} $OUT_PATHS
         `,
@@ -147,6 +162,8 @@ async function setup() {
 async function upload() {
   core.startGroup('Cachix: push');
 
+  const cachixBin = core.getState('cachixBin');
+
   try {
     if (skipPush === 'true') {
       core.info('Pushing is disabled as skipPush is set to true');
@@ -172,16 +189,15 @@ async function upload() {
         daemonLog.on('line', (line) => core.info(line));
 
         try {
-          const cachix = core.getState('cachix');
           core.debug('Waiting for Cachix daemon to exit...');
-          await exec.exec(cachix, ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
+          await exec.exec(cachixBin, ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
         } finally {
           // Wait a bit for the logs to flush through
           await new Promise((resolve) => setTimeout(resolve, 1000));
           daemonLog.unwatch();
         }
       } else {
-        await exec.exec(`${__dirname}/push-paths.sh`, ['cachix', cachixArgs, name, pathsToPush, pushFilter]);
+        await exec.exec(`${__dirname}/push-paths.sh`, [cachixBin, cachixArgs, name, pathsToPush, pushFilter]);
       }
     } else {
       core.info('Pushing is disabled as signingKey nor authToken are set (or are empty?) in your YAML file.');

@@ -19,12 +19,14 @@ inputs:
     description: 'Ignored if pathsToPush is set. Regular expression to exclude derivations for the cache push, for example "(-source$|nixpkgs\.tar\.gz$)". Warning: this filter does not guarantee it will not get pushed in case the path is part of the closure of something that will get pushed.'
   cachixArgs:
     description: 'Extra command-line arguments to pass to cachix. If empty, defaults to -j8'
-  installCommand:
-    description: 'Override the default cachix installation method'
   skipAddingSubstituter:
     description: 'Set to true to skip adding cachix cache as a substitute'
   useDaemon:
     description: "Push store paths to the cache as they're built with the Cachix Daemon"
+  cachixBin:
+    description: 'Provide a custom path to the cachix binary'
+  installCommand:
+    description: 'Override the default cachix installation method'
 branding:
   color: 'blue'
   icon: 'database'
