@@ -3029,167 +3029,6 @@ function copyFile(srcFile, destFile, force) {
 
 /***/ }),
 
-/***/ 7126:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-var fs = __nccwpck_require__(7147)
-var core
-if (process.platform === 'win32' || global.TESTING_WINDOWS) {
-  core = __nccwpck_require__(2001)
-} else {
-  core = __nccwpck_require__(9728)
-}
-
-module.exports = isexe
-isexe.sync = sync
-
-function isexe (path, options, cb) {
-  if (typeof options === 'function') {
-    cb = options
-    options = {}
-  }
-
-  if (!cb) {
-    if (typeof Promise !== 'function') {
-      throw new TypeError('callback not provided')
-    }
-
-    return new Promise(function (resolve, reject) {
-      isexe(path, options || {}, function (er, is) {
-        if (er) {
-          reject(er)
-        } else {
-          resolve(is)
-        }
-      })
-    })
-  }
-
-  core(path, options || {}, function (er, is) {
-    // ignore EACCES because that just means we aren't allowed to run it
-    if (er) {
-      if (er.code === 'EACCES' || options && options.ignoreErrors) {
-        er = null
-        is = false
-      }
-    }
-    cb(er, is)
-  })
-}
-
-function sync (path, options) {
-  // my kingdom for a filtered catch
-  try {
-    return core.sync(path, options || {})
-  } catch (er) {
-    if (options && options.ignoreErrors || er.code === 'EACCES') {
-      return false
-    } else {
-      throw er
-    }
-  }
-}
-
-
-/***/ }),
-
-/***/ 9728:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-module.exports = isexe
-isexe.sync = sync
-
-var fs = __nccwpck_require__(7147)
-
-function isexe (path, options, cb) {
-  fs.stat(path, function (er, stat) {
-    cb(er, er ? false : checkStat(stat, options))
-  })
-}
-
-function sync (path, options) {
-  return checkStat(fs.statSync(path), options)
-}
-
-function checkStat (stat, options) {
-  return stat.isFile() && checkMode(stat, options)
-}
-
-function checkMode (stat, options) {
-  var mod = stat.mode
-  var uid = stat.uid
-  var gid = stat.gid
-
-  var myUid = options.uid !== undefined ?
-    options.uid : process.getuid && process.getuid()
-  var myGid = options.gid !== undefined ?
-    options.gid : process.getgid && process.getgid()
-
-  var u = parseInt('100', 8)
-  var g = parseInt('010', 8)
-  var o = parseInt('001', 8)
-  var ug = u | g
-
-  var ret = (mod & o) ||
-    (mod & g) && gid === myGid ||
-    (mod & u) && uid === myUid ||
-    (mod & ug) && myUid === 0
-
-  return ret
-}
-
-
-/***/ }),
-
-/***/ 2001:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-module.exports = isexe
-isexe.sync = sync
-
-var fs = __nccwpck_require__(7147)
-
-function checkPathExt (path, options) {
-  var pathext = options.pathExt !== undefined ?
-    options.pathExt : process.env.PATHEXT
-
-  if (!pathext) {
-    return true
-  }
-
-  pathext = pathext.split(';')
-  if (pathext.indexOf('') !== -1) {
-    return true
-  }
-  for (var i = 0; i < pathext.length; i++) {
-    var p = pathext[i].toLowerCase()
-    if (p && path.substr(-p.length).toLowerCase() === p) {
-      return true
-    }
-  }
-  return false
-}
-
-function checkStat (stat, path, options) {
-  if (!stat.isSymbolicLink() && !stat.isFile()) {
-    return false
-  }
-  return checkPathExt(path, options)
-}
-
-function isexe (path, options, cb) {
-  fs.stat(path, function (er, stat) {
-    cb(er, er ? false : checkStat(stat, path, options))
-  })
-}
-
-function sync (path, options) {
-  return checkStat(fs.statSync(path), path, options)
-}
-
-
-/***/ }),
-
 /***/ 7129:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -7289,7 +7128,7 @@ exports["default"] = _default;
 /***/ 6143:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-const isexe = __nccwpck_require__(7126)
+const { isexe, sync: isexeSync } = __nccwpck_require__(5200)
 const { join, delimiter, sep, posix } = __nccwpck_require__(1017)
 
 const isWindows = process.platform === 'win32'
@@ -7322,11 +7161,7 @@ const getPathInfo = (cmd, {
   if (isWindows) {
     const pathExtExe = optPathExt ||
       ['.EXE', '.CMD', '.BAT', '.COM'].join(optDelimiter)
-    const pathExt = pathExtExe.split(optDelimiter).reduce((acc, item) => {
-      acc.push(item)
-      acc.push(item.toLowerCase())
-      return acc
-    }, [])
+    const pathExt = pathExtExe.split(optDelimiter).flatMap((item) => [item, item.toLowerCase()])
     if (cmd.includes('.') && pathExt[0] !== '') {
       pathExt.unshift('')
     }
@@ -7381,7 +7216,7 @@ const whichSync = (cmd, opt = {}) => {
 
     for (const ext of pathExt) {
       const withExt = p + ext
-      const is = isexe.sync(withExt, { pathExt: pathExtExe, ignoreErrors: true })
+      const is = isexeSync(withExt, { pathExt: pathExtExe, ignoreErrors: true })
       if (is) {
         if (!opt.all) {
           return withExt
@@ -7934,13 +7769,21 @@ async function setup() {
                 core.debug(`Installed Cachix executable: ${cachixBin}`);
                 core.endGroup();
             }
-<<<<<<< HEAD
         }
         core.saveState('cachixBin', cachixBin);
         // Print the executable version.
         // Also verifies that the binary exists and is executable.
         core.startGroup('Cachix: checking version');
-        await exec.exec(cachixBin, ['--version']);
+        let stdout = '';
+        const options = {
+            listeners: {
+                stdout: (data) => {
+                    stdout += data.toString();
+                },
+            },
+        };
+        await exec.exec(cachixBin, ['--version'], options);
+        let cachixVersion = semver_1.default.coerce(stdout.split(" ")[1]);
         core.endGroup();
         // for managed signing key and private caches
         if (authToken !== "") {
@@ -7952,22 +7795,6 @@ async function setup() {
         else {
             core.startGroup(`Cachix: using cache ` + name);
             await exec.exec(cachixBin, ['use', name]);
-=======
-            core.saveState('cachixBin', cachixBin);
-            // Print the executable version.
-            // Also verifies that the binary exists and is executable.
-            core.startGroup('Cachix: checking version');
-            let stdout = '';
-            const options = {
-                listeners: {
-                    stdout: (data) => {
-                        stdout += data.toString();
-                    },
-                },
-            };
-            yield exec.exec(cachixBin, ['--version'], options);
-            let cachixVersion = semver_1.default.coerce(stdout.split(" ")[1]);
->>>>>>> 8d567fb (Add checks for daemon support)
             core.endGroup();
         }
         if (extraPullNames != "") {
@@ -7982,7 +7809,12 @@ async function setup() {
         if (signingKey !== "") {
             core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
         }
-        if (useDaemon) {
+        let daemonSupported = (cachixVersion) ? semver_1.default.gte(cachixVersion, '1.6.0') : false;
+        core.saveState('daemonSupported', daemonSupported);
+        if (useDaemon && !daemonSupported) {
+            core.warning(`Cachix Daemon is not supported by this version of Cachix (${cachixVersion}). Ignoring the 'useDaemon' option.`);
+        }
+        if (useDaemon && daemonSupported) {
             const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
             const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
             const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
@@ -8005,53 +7837,8 @@ async function setup() {
                 core.error('Failed to spawn Cachix Daemon');
                 return;
             }
-<<<<<<< HEAD
             const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
             await fs.writeFile(postBuildHookScriptPath, `
-=======
-            if (extraPullNames != "") {
-                core.startGroup(`Cachix: using extra caches ` + extraPullNames);
-                const extraPullNameList = extraPullNames.split(',');
-                for (let itemName of extraPullNameList) {
-                    const trimmedItemName = itemName.trim();
-                    yield exec.exec(cachixBin, ['use', trimmedItemName]);
-                }
-                core.endGroup();
-            }
-            if (signingKey !== "") {
-                core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
-            }
-            let daemonSupported = semver_1.default.gte(cachixVersion, '1.6.0');
-            core.saveState('daemonSupported', daemonSupported);
-            if (useDaemon && !daemonSupported) {
-                core.warning(`Cachix Daemon is not supported by this version of Cachix (${cachixVersion}). Ignoring the 'useDaemon' option.`);
-            }
-            if (useDaemon && daemonSupported) {
-                const tmpdir = (_a = process.env['RUNNER_TEMP']) !== null && _a !== void 0 ? _a : os.tmpdir();
-                const daemonDir = yield fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
-                const daemonLog = yield fs.open(`${daemonDir}/daemon.log`, 'a');
-                const daemon = (0, node_child_process_1.spawn)(cachixBin, [
-                    'daemon', 'run',
-                    '--socket', `${daemonDir}/daemon.sock`,
-                ], {
-                    stdio: ['ignore', daemonLog.fd, daemonLog.fd],
-                    detached: true,
-                });
-                daemon.on('error', (err) => {
-                    core.error(`Cachix Daemon failed: ${err}`);
-                });
-                if (typeof daemon.pid === 'number') {
-                    const pid = daemon.pid.toString();
-                    core.debug(`Spawned Cachix Daemon with PID: ${pid}`);
-                    yield fs.writeFile(pidFilePath(daemonDir), pid);
-                }
-                else {
-                    core.error('Failed to spawn Cachix Daemon');
-                    return;
-                }
-                const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
-                yield fs.writeFile(postBuildHookScriptPath, `
->>>>>>> 8d567fb (Add checks for daemon support)
         #!/bin/sh
 
         set -eu
@@ -8087,55 +7874,20 @@ async function setup() {
         core.setFailed(`Action failed with error: ${error}`);
     }
 }
-<<<<<<< HEAD
 async function upload() {
     core.startGroup('Cachix: push');
     const cachixBin = core.getState('cachixBin');
+    const daemonSupported = core.getState('daemonSupported');
     try {
         if (skipPush === 'true') {
             core.info('Pushing is disabled as skipPush is set to true');
         }
         else if (signingKey !== "" || authToken !== "") {
-            if (useDaemon) {
+            if (useDaemon && daemonSupported) {
                 const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
                 if (!daemonDir) {
                     core.debug('Cachix Daemon not started. Skipping push');
                     return;
-=======
-function upload() {
-    return __awaiter(this, void 0, void 0, function* () {
-        core.startGroup('Cachix: push');
-        const cachixBin = core.getState('cachixBin');
-        const daemonSupported = core.getState('daemonSupported');
-        try {
-            if (skipPush === 'true') {
-                core.info('Pushing is disabled as skipPush is set to true');
-            }
-            else if (signingKey !== "" || authToken !== "") {
-                if (useDaemon && daemonSupported) {
-                    const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
-                    if (!daemonDir) {
-                        core.debug('Cachix Daemon not started. Skipping push');
-                        return;
-                    }
-                    const daemonPid = parseInt(yield fs.readFile(pidFilePath(daemonDir), { encoding: 'utf8' }));
-                    if (!daemonPid) {
-                        core.error('Failed to find PID of Cachix Daemon. Skipping push.');
-                        return;
-                    }
-                    core.debug(`Found Cachix daemon with pid ${daemonPid}`);
-                    let daemonLog = new tail_1.Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
-                    daemonLog.on('line', (line) => core.info(line));
-                    try {
-                        core.debug('Waiting for Cachix daemon to exit...');
-                        yield exec.exec(cachixBin, ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
-                    }
-                    finally {
-                        // Wait a bit for the logs to flush through
-                        yield new Promise((resolve) => setTimeout(resolve, 1000));
-                        daemonLog.unwatch();
-                    }
->>>>>>> 8d567fb (Add checks for daemon support)
                 }
                 const daemonPid = parseInt(await fs.readFile(pidFilePath(daemonDir), { encoding: 'utf8' }));
                 if (!daemonPid) {
@@ -8225,6 +7977,14 @@ module.exports = require("events");
 
 "use strict";
 module.exports = require("fs");
+
+/***/ }),
+
+/***/ 3292:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("fs/promises");
 
 /***/ }),
 
@@ -8329,6 +8089,212 @@ module.exports = require("tls");
 
 "use strict";
 module.exports = require("util");
+
+/***/ }),
+
+/***/ 5200:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sync = exports.isexe = exports.posix = exports.win32 = void 0;
+const posix = __importStar(__nccwpck_require__(5523));
+exports.posix = posix;
+const win32 = __importStar(__nccwpck_require__(4323));
+exports.win32 = win32;
+__exportStar(__nccwpck_require__(7252), exports);
+const platform = process.env._ISEXE_TEST_PLATFORM_ || process.platform;
+const impl = platform === 'win32' ? win32 : posix;
+/**
+ * Determine whether a path is executable on the current platform.
+ */
+exports.isexe = impl.isexe;
+/**
+ * Synchronously determine whether a path is executable on the
+ * current platform.
+ */
+exports.sync = impl.sync;
+//# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 7252:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+//# sourceMappingURL=options.js.map
+
+/***/ }),
+
+/***/ 5523:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+/**
+ * This is the Posix implementation of isexe, which uses the file
+ * mode and uid/gid values.
+ *
+ * @module
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sync = exports.isexe = void 0;
+const fs_1 = __nccwpck_require__(7147);
+const promises_1 = __nccwpck_require__(3292);
+/**
+ * Determine whether a path is executable according to the mode and
+ * current (or specified) user and group IDs.
+ */
+const isexe = async (path, options = {}) => {
+    const { ignoreErrors = false } = options;
+    try {
+        return checkStat(await (0, promises_1.stat)(path), options);
+    }
+    catch (e) {
+        const er = e;
+        if (ignoreErrors || er.code === 'EACCES')
+            return false;
+        throw er;
+    }
+};
+exports.isexe = isexe;
+/**
+ * Synchronously determine whether a path is executable according to
+ * the mode and current (or specified) user and group IDs.
+ */
+const sync = (path, options = {}) => {
+    const { ignoreErrors = false } = options;
+    try {
+        return checkStat((0, fs_1.statSync)(path), options);
+    }
+    catch (e) {
+        const er = e;
+        if (ignoreErrors || er.code === 'EACCES')
+            return false;
+        throw er;
+    }
+};
+exports.sync = sync;
+const checkStat = (stat, options) => stat.isFile() && checkMode(stat, options);
+const checkMode = (stat, options) => {
+    const myUid = options.uid ?? process.getuid?.();
+    const myGroups = options.groups ?? process.getgroups?.() ?? [];
+    const myGid = options.gid ?? process.getgid?.() ?? myGroups[0];
+    if (myUid === undefined || myGid === undefined) {
+        throw new Error('cannot get uid or gid');
+    }
+    const groups = new Set([myGid, ...myGroups]);
+    const mod = stat.mode;
+    const uid = stat.uid;
+    const gid = stat.gid;
+    const u = parseInt('100', 8);
+    const g = parseInt('010', 8);
+    const o = parseInt('001', 8);
+    const ug = u | g;
+    return !!(mod & o ||
+        (mod & g && groups.has(gid)) ||
+        (mod & u && uid === myUid) ||
+        (mod & ug && myUid === 0));
+};
+//# sourceMappingURL=posix.js.map
+
+/***/ }),
+
+/***/ 4323:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+/**
+ * This is the Windows implementation of isexe, which uses the file
+ * extension and PATHEXT setting.
+ *
+ * @module
+ */
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.sync = exports.isexe = void 0;
+const fs_1 = __nccwpck_require__(7147);
+const promises_1 = __nccwpck_require__(3292);
+/**
+ * Determine whether a path is executable based on the file extension
+ * and PATHEXT environment variable (or specified pathExt option)
+ */
+const isexe = async (path, options = {}) => {
+    const { ignoreErrors = false } = options;
+    try {
+        return checkStat(await (0, promises_1.stat)(path), path, options);
+    }
+    catch (e) {
+        const er = e;
+        if (ignoreErrors || er.code === 'EACCES')
+            return false;
+        throw er;
+    }
+};
+exports.isexe = isexe;
+/**
+ * Synchronously determine whether a path is executable based on the file
+ * extension and PATHEXT environment variable (or specified pathExt option)
+ */
+const sync = (path, options = {}) => {
+    const { ignoreErrors = false } = options;
+    try {
+        return checkStat((0, fs_1.statSync)(path), path, options);
+    }
+    catch (e) {
+        const er = e;
+        if (ignoreErrors || er.code === 'EACCES')
+            return false;
+        throw er;
+    }
+};
+exports.sync = sync;
+const checkPathExt = (path, options) => {
+    const { pathExt = process.env.PATHEXT || '' } = options;
+    const peSplit = pathExt.split(';');
+    if (peSplit.indexOf('') !== -1) {
+        return true;
+    }
+    for (let i = 0; i < peSplit.length; i++) {
+        const p = peSplit[i].toLowerCase();
+        const ext = path.substring(path.length - p.length).toLowerCase();
+        if (p && ext === p) {
+            return true;
+        }
+    }
+    return false;
+};
+const checkStat = (stat, path, options) => stat.isFile() && checkPathExt(path, options);
+//# sourceMappingURL=win32.js.map
 
 /***/ })
 

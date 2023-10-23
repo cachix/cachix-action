@@ -92,7 +92,7 @@ async function setup() {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
     }
 
-    let daemonSupported = semver.gte(cachixVersion, '1.6.0');
+    let daemonSupported = (cachixVersion) ? semver.gte(cachixVersion, '1.6.0') : false;
     core.saveState('daemonSupported', daemonSupported);
 
     if (useDaemon && !daemonSupported) {
