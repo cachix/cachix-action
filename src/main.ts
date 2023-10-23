@@ -6,6 +6,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { Tail } from 'tail';
 import which from 'which';
+import semver from 'semver';
 
 // inputs
 const name = core.getInput('name', { required: true });
@@ -52,7 +53,16 @@ async function setup() {
     // Print the executable version.
     // Also verifies that the binary exists and is executable.
     core.startGroup('Cachix: checking version')
-    await exec.exec(cachixBin, ['--version']);
+    let stdout = '';
+    const options = {
+      listeners: {
+        stdout: (data: Buffer) => {
+          stdout += data.toString();
+        },
+      },
+    };
+    await exec.exec(cachixBin, ['--version'], options);
+    let cachixVersion = semver.coerce(stdout.split(" ")[1]);
     core.endGroup()
 
     // for managed signing key and private caches
@@ -82,7 +92,14 @@ async function setup() {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
     }
 
-    if (useDaemon) {
+    let daemonSupported = semver.gte(cachixVersion, '1.6.0');
+    core.saveState('daemonSupported', daemonSupported);
+
+    if (useDaemon && !daemonSupported) {
+      core.warning(`Cachix Daemon is not supported by this version of Cachix (${cachixVersion}). Ignoring the 'useDaemon' option.`)
+    }
+
+    if (useDaemon && daemonSupported) {
       const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
       const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
       const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
@@ -163,12 +180,13 @@ async function upload() {
   core.startGroup('Cachix: push');
 
   const cachixBin = core.getState('cachixBin');
+  const daemonSupported = core.getState('daemonSupported');
 
   try {
     if (skipPush === 'true') {
       core.info('Pushing is disabled as skipPush is set to true');
     } else if (signingKey !== "" || authToken !== "") {
-      if (useDaemon) {
+      if (useDaemon && daemonSupported) {
         const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
 
         if (!daemonDir) {
