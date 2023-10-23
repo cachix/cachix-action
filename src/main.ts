@@ -155,10 +155,28 @@ async function setup() {
       core.debug(`Wrote post-build-hook nix config to ${postBuildHookConfigPath}`);
 
       // Register the post-build-hook
-      let userConfFiles = process.env['NIX_USER_CONF_FILES'] ?? '';
+
+      // From the nix.conf manual:
+      //
+      // If NIX_USER_CONF_FILES is set, then each path separated by : will be loaded in  reverse order.
+      //
+      // Otherwise  it  will  look for nix / nix.conf files in XDG_CONFIG_DIRS and XDG_CONFIG_HOME.If
+      // unset, XDG_CONFIG_DIRS defaults to / etc / xdg, and XDG_CONFIG_HOME defaults  to  $HOME /.config
+      // as per XDG Base Directory Specification.
+      const userConfFiles = process.env['NIX_USER_CONF_FILES'] ?? '';
+      const xdgConfigHome = process.env['XDG_CONFIG_HOME'] ?? `${os.homedir()}/.config`;
+      const xdgConfigDirs = process.env['XDG_CONFIG_DIRS'] ?? '/etc/xdg';
+      const nixConfDir = process.env['NIX_CONF_DIR'] ?? '/etc/nix';
+
       core.exportVariable(
         'NIX_USER_CONF_FILES',
-        [userConfFiles, postBuildHookConfigPath].filter((x) => x !== '').join(':')
+        [
+          postBuildHookConfigPath,
+          userConfFiles,
+          `${xdgConfigHome}/nix/nix.conf`,
+          `${xdgConfigDirs}/nix/nix.conf`,
+          `${nixConfDir}/nix.conf`,
+        ].filter((x) => x !== '').join(':')
       );
       core.debug(`Registered post-build-hook nix config in NIX_USER_CONF_FILES=${process.env['NIX_USER_CONF_FILES']}`);
 
