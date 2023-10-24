@@ -32,6 +32,21 @@ async function setup() {
 
     if (cachixBin !== "") {
       core.debug(`Using Cachix executable from input: ${cachixBin}`);
+    } else if (useDaemon) {
+      // TODO: remove once stable and the daemon has been released
+      cachixBin = await execToVariable(
+        'nix',
+        [
+          'build',
+          '--show-trace',
+          '--print-out-paths',
+          '--accept-flake-config',
+          '--extra-experimental-features',
+          'nix-command flakes',
+          'github:cachix/cachix/feature/daemon',
+        ],
+      ).then((storePath) => `${storePath.trimEnd()}/bin/cachix`);
+      core.info(`Daemon mode is enabled. Using the latest Cachix executable from github:cachix/cachix/feature/daemon: ${cachixBin}`);
     } else {
       // Find the Cachix executable in PATH
       let resolvedCachixBin = which.sync('cachix', { nothrow: true });
@@ -53,16 +68,9 @@ async function setup() {
     // Print the executable version.
     // Also verifies that the binary exists and is executable.
     core.startGroup('Cachix: checking version')
-    let stdout = '';
-    const options = {
-      listeners: {
-        stdout: (data: Buffer) => {
-          stdout += data.toString();
-        },
-      },
-    };
-    await exec.exec(cachixBin, ['--version'], options);
-    let cachixVersion = semver.coerce(stdout.split(" ")[1]);
+    let cachixVersion =
+      await execToVariable(cachixBin, ['--version'])
+        .then((res) => semver.coerce(res.split(" ")[1]));
     core.endGroup()
 
     // for managed signing key and private caches
@@ -92,6 +100,7 @@ async function setup() {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
     }
 
+    // TODO: update the final release bounds
     let daemonSupported = (cachixVersion) ? semver.gte(cachixVersion, '1.6.0') : false;
     core.saveState('daemonSupported', daemonSupported);
 
@@ -109,6 +118,7 @@ async function setup() {
         [
           'daemon', 'run',
           '--socket', `${daemonDir}/daemon.sock`,
+          name,
         ],
         {
           stdio: ['ignore', daemonLog.fd, daemonLog.fd],
@@ -140,7 +150,7 @@ async function setup() {
 
         exec ${cachixBin} daemon push \
           --socket ${daemonDir}/daemon.sock \
-          ${name} $OUT_PATHS
+          $OUT_PATHS
         `,
         // Make the post-build-hook executable
         { mode: 0o755 }
@@ -250,6 +260,21 @@ async function upload() {
 
 function pidFilePath(daemonDir: string): string {
   return path.join(daemonDir, 'daemon.pid');
+}
+
+// Exec a command and return the stdout as a string.
+async function execToVariable(command: string, args: string[]): Promise<string> {
+  let res = '';
+
+  const options = {
+    listeners: {
+      stdout: (data: Buffer) => {
+        res += data.toString();
+      },
+    },
+  };
+
+  return exec.exec(command, args, options).then(() => res);
 }
 
 // Get the paths to the user config files.
