@@ -163,20 +163,23 @@ async function setup() {
       // Otherwise  it  will  look for nix / nix.conf files in XDG_CONFIG_DIRS and XDG_CONFIG_HOME.If
       // unset, XDG_CONFIG_DIRS defaults to / etc / xdg, and XDG_CONFIG_HOME defaults  to  $HOME /.config
       // as per XDG Base Directory Specification.
-      const userConfFiles = process.env['NIX_USER_CONF_FILES'] ?? '';
-      const xdgConfigHome = process.env['XDG_CONFIG_HOME'] ?? `${os.homedir()}/.config`;
-      const xdgConfigDirs = process.env['XDG_CONFIG_DIRS'] ?? '/etc/xdg';
-      const nixConfDir = process.env['NIX_CONF_DIR'] ?? '/etc/nix';
+      //
+      // The system nix.conf ($NIX_CONF_DIR/nix.conf) is always loaded first.
+      //
+      // If the user has overridden the default nix.conf locations with NIX_USER_CONF_DIR, we reuse it and prepend out own config.
+      const existingUserConfEnv = process.env['NIX_USER_CONF_FILES'] ?? '';
+      let nixUserConfFilesEnv = '';
+
+      if (existingUserConfEnv) {
+        nixUserConfFilesEnv = postBuildHookConfigPath + ':' + existingUserConfEnv;
+      } else {
+        const userConfigFiles = getUserConfigFiles();
+        nixUserConfFilesEnv = [postBuildHookConfigPath, ...userConfigFiles].filter((x) => x !== '').join(':');
+      }
 
       core.exportVariable(
         'NIX_USER_CONF_FILES',
-        [
-          postBuildHookConfigPath,
-          userConfFiles,
-          `${xdgConfigHome}/nix/nix.conf`,
-          `${xdgConfigDirs}/nix/nix.conf`,
-          `${nixConfDir}/nix.conf`,
-        ].filter((x) => x !== '').join(':')
+        nixUserConfFilesEnv,
       );
       core.debug(`Registered post-build-hook nix config in NIX_USER_CONF_FILES=${process.env['NIX_USER_CONF_FILES']}`);
 
@@ -245,8 +248,21 @@ async function upload() {
   core.endGroup();
 }
 
-function pidFilePath(daemonDir: string) {
+function pidFilePath(daemonDir: string): string {
   return path.join(daemonDir, 'daemon.pid');
+}
+
+// Get the paths to the user config files.
+function getUserConfigFiles(): string[] {
+  const userConfigDirs = getUserConfigDirs();
+  return userConfigDirs.map((dir) => `${dir}/nix/nix.conf`);
+}
+
+// Get the user config directories.
+function getUserConfigDirs(): string[] {
+  const xdgConfigHome = process.env['XDG_CONFIG_HOME'] ?? `${os.homedir()}/.config`;
+  const xdgConfigDirs = (process.env['XDG_CONFIG_DIRS'] ?? '/etc/xdg').split(':');
+  return [xdgConfigHome, ...xdgConfigDirs];
 }
 
 const isPost = !!core.getState('isPost');
