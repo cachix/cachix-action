@@ -146,7 +146,6 @@ async function setup() {
         set -eu
         set -x # remove in production
         set -f # disable globbing
-        export IFS=''
 
         exec ${cachixBin} daemon push \
           --socket ${daemonDir}/daemon.sock \
