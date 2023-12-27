@@ -139,58 +139,7 @@ async function setup() {
         return;
       }
 
-      const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
-      await fs.writeFile(postBuildHookScriptPath, `
-        #!/bin/sh
-
-        set -eu
-        set -x # remove in production
-        set -f # disable globbing
-
-        exec ${cachixBin} daemon push \
-          --socket ${daemonDir}/daemon.sock \
-          $OUT_PATHS
-        `,
-        // Make the post-build-hook executable
-        { mode: 0o755 }
-      );
-      core.debug(`Wrote post-build-hook script to ${postBuildHookScriptPath}`);
-
-      const postBuildHookConfigPath = `${daemonDir}/nix.conf`;
-      await fs.writeFile(
-        postBuildHookConfigPath,
-        `post-build-hook = ${postBuildHookScriptPath}`
-      );
-      core.debug(`Wrote post-build-hook nix config to ${postBuildHookConfigPath}`);
-
-      // Register the post-build-hook
-
-      // From the nix.conf manual:
-      //
-      // If NIX_USER_CONF_FILES is set, then each path separated by : will be loaded in  reverse order.
-      //
-      // Otherwise  it  will  look for nix / nix.conf files in XDG_CONFIG_DIRS and XDG_CONFIG_HOME.If
-      // unset, XDG_CONFIG_DIRS defaults to / etc / xdg, and XDG_CONFIG_HOME defaults  to  $HOME /.config
-      // as per XDG Base Directory Specification.
-      //
-      // The system nix.conf ($NIX_CONF_DIR/nix.conf) is always loaded first.
-      //
-      // If the user has overridden the default nix.conf locations with NIX_USER_CONF_DIR, we reuse it and prepend out own config.
-      const existingUserConfEnv = process.env['NIX_USER_CONF_FILES'] ?? '';
-      let nixUserConfFilesEnv = '';
-
-      if (existingUserConfEnv) {
-        nixUserConfFilesEnv = postBuildHookConfigPath + ':' + existingUserConfEnv;
-      } else {
-        const userConfigFiles = getUserConfigFiles();
-        nixUserConfFilesEnv = [postBuildHookConfigPath, ...userConfigFiles].filter((x) => x !== '').join(':');
-      }
-
-      core.exportVariable(
-        'NIX_USER_CONF_FILES',
-        nixUserConfFilesEnv,
-      );
-      core.debug(`Registered post-build-hook nix config in NIX_USER_CONF_FILES=${process.env['NIX_USER_CONF_FILES']}`);
+      await registerPostBuildHook(cachixBin, daemonDir);
 
       // Expose the daemon directory for the post action hook
       core.exportVariable(ENV_CACHIX_DAEMON_DIR, daemonDir);
@@ -274,6 +223,67 @@ async function execToVariable(command: string, args: string[]): Promise<string> 
   };
 
   return exec.exec(command, args, options).then(() => res);
+}
+
+// Register the post-build-hook
+
+// From the nix.conf manual:
+//
+// If NIX_USER_CONF_FILES is set, then each path separated by : will be loaded in  reverse order.
+//
+// Otherwise  it  will  look for nix / nix.conf files in XDG_CONFIG_DIRS and XDG_CONFIG_HOME.If
+// unset, XDG_CONFIG_DIRS defaults to / etc / xdg, and XDG_CONFIG_HOME defaults  to  $HOME /.config
+// as per XDG Base Directory Specification.
+//
+// The system nix.conf ($NIX_CONF_DIR/nix.conf) is always loaded first.
+//
+// If the user has overridden the default nix.conf locations with NIX_USER_CONF_DIR, we reuse it and prepend out own config.
+// If the user has set NIX_CONF, we append our config to it.
+async function registerPostBuildHook(cachixBin: string, daemonDir: string) {
+  const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
+  await fs.writeFile(postBuildHookScriptPath, `
+    #!/bin/sh
+
+    set -eu
+    set -f # disable globbing
+
+    exec ${cachixBin} daemon push \
+      --socket ${daemonDir}/daemon.sock \
+      $OUT_PATHS
+    `,
+    // Make the post-build-hook executable
+    { mode: 0o755 }
+  );
+  core.debug(`Wrote post-build-hook script to ${postBuildHookScriptPath}`);
+
+  const postBuildHookConfigPath = `${daemonDir}/nix.conf`;
+  await fs.writeFile(
+    postBuildHookConfigPath,
+    `post-build-hook = ${postBuildHookScriptPath}`
+  );
+  core.debug(`Wrote post-build-hook nix config to ${postBuildHookConfigPath}`);
+
+  const existingNixConf = process.env['NIX_CONF'];
+  if (existingNixConf) {
+    core.exportVariable('NIX_CONF', `${existingNixConf}\npost-build-hook = ${postBuildHookScriptPath}`);
+    core.debug('Registered post-build-hook in NIX_CONF');
+  } else {
+    const existingUserConfEnv = process.env['NIX_USER_CONF_FILES'] ?? '';
+    let nixUserConfFilesEnv = '';
+
+    if (existingUserConfEnv) {
+      nixUserConfFilesEnv = postBuildHookConfigPath + ':' + existingUserConfEnv;
+    } else {
+      const userConfigFiles = getUserConfigFiles();
+      nixUserConfFilesEnv = [postBuildHookConfigPath, ...userConfigFiles].filter((x) => x !== '').join(':');
+    }
+
+    core.exportVariable(
+      'NIX_USER_CONF_FILES',
+      nixUserConfFilesEnv,
+    );
+    core.debug(`Registered post-build-hook in NIX_USER_CONF_FILES=${process.env['NIX_USER_CONF_FILES']}`);
+  }
 }
 
 // Get the paths to the user config files.
