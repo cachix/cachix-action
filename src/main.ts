@@ -319,7 +319,7 @@ async function isTrustedUser(): Promise<boolean> {
     core.debug(`Trusted groups: ${trustedGroups}`);
 
     // Chech if Nix is installed in single-user mode.
-    let isStoreWritable = isWritable('/nix/store');
+    let isStoreWritable = await isWritable('/nix/store');
     core.debug(`Is store writable: ${isStoreWritable}`);
 
     return isStoreWritable
