@@ -8001,12 +8001,15 @@ async function isTrustedUser() {
         // Chech if Nix is installed in single-user mode.
         let isStoreWritable = await isWritable('/nix/store');
         core.debug(`Is store writable: ${isStoreWritable}`);
-        return isStoreWritable
+        let isTrustedUser = isStoreWritable
             || trustedUsers.includes(user)
             || trustedGroups.some((group) => userGroups.includes(group));
+        core.debug(`User ${user} is trusted: ${isTrustedUser}`);
+        return isTrustedUser;
     }
-    catch (error) {
+    catch (err) {
         core.warning('Failed to determine if the user is trusted. Assuming untrusted user.');
+        core.debug(`error: ${err}`);
         return false;
     }
 }

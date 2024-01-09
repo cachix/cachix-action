@@ -311,6 +311,7 @@ async function isTrustedUser(): Promise<boolean> {
   try {
     let user = os.userInfo().username;
     core.debug(`Checking if user ${user} is trusted`);
+
     let userGroups = await execToVariable('id', ['-Gn', user], { silent: true }).then((str) => str.trim().split(' '));
     core.debug(`User ${user} is in groups ${userGroups}`);
 
@@ -322,11 +323,17 @@ async function isTrustedUser(): Promise<boolean> {
     let isStoreWritable = await isWritable('/nix/store');
     core.debug(`Is store writable: ${isStoreWritable}`);
 
-    return isStoreWritable
+    let isTrustedUser =
+      isStoreWritable
       || trustedUsers.includes(user)
       || trustedGroups.some((group) => userGroups.includes(group));
-  } catch (error) {
+
+    core.debug(`User ${user} is trusted: ${isTrustedUser}`);
+
+    return isTrustedUser;
+  } catch (err) {
     core.warning('Failed to determine if the user is trusted. Assuming untrusted user.');
+    core.debug(`error: ${err}`);
     return false;
   }
 }
