@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs/promises';
+import { openSync } from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { Tail } from 'tail';
@@ -115,7 +116,7 @@ async function setup() {
     if (useDaemon && supportsDaemon) {
       const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
       const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
-      const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
+      const daemonLog = openSync(`${daemonDir}/daemon.log`, 'a');
 
       const daemon = spawn(
         cachixBin,
@@ -125,7 +126,7 @@ async function setup() {
           name,
         ],
         {
-          stdio: ['ignore', daemonLog.fd, daemonLog.fd],
+          stdio: ['ignore', daemonLog, daemonLog],
           detached: true,
         }
       );

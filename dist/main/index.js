@@ -7729,6 +7729,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 const node_child_process_1 = __nccwpck_require__(7718);
 const fs = __importStar(__nccwpck_require__(3977));
+const node_fs_1 = __nccwpck_require__(7561);
 const os = __importStar(__nccwpck_require__(612));
 const path = __importStar(__nccwpck_require__(9411));
 const tail_1 = __nccwpck_require__(5824);
@@ -7827,13 +7828,13 @@ async function setup() {
         if (useDaemon && supportsDaemon) {
             const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
             const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
-            const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
+            const daemonLog = (0, node_fs_1.openSync)(`${daemonDir}/daemon.log`, 'a');
             const daemon = (0, node_child_process_1.spawn)(cachixBin, [
                 'daemon', 'run',
                 '--socket', `${daemonDir}/daemon.sock`,
                 name,
             ], {
-                stdio: ['ignore', daemonLog.fd, daemonLog.fd],
+                stdio: ['ignore', daemonLog, daemonLog],
                 detached: true,
             });
             daemon.on('error', (err) => {
@@ -8127,6 +8128,14 @@ module.exports = require("net");
 
 "use strict";
 module.exports = require("node:child_process");
+
+/***/ }),
+
+/***/ 7561:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:fs");
 
 /***/ }),
 
