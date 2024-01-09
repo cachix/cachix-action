@@ -102,15 +102,19 @@ async function setup() {
     }
 
     let supportsDaemonInterface = (cachixVersion) ? semver.gte(cachixVersion, '1.7.0') : false;
-    let supportsPostBuildHook = isTrustedUser();
+    let supportsPostBuildHook = await isTrustedUser();
+    let hasPushCredentials = signingKey !== "" || authToken !== "";
     if (useDaemon && !supportsDaemonInterface) {
       core.warning(`Cachix Daemon is not supported by this version of Cachix (${cachixVersion}). Ignoring the 'useDaemon' option.`)
     }
     if (useDaemon && !supportsPostBuildHook) {
       core.warning("This user is not allowed to set the post-build-hook. Ignoring the 'useDaemon' option.");
     }
+    if (useDaemon && !hasPushCredentials) {
+      core.warning("No push credentials found. Ignoring the 'useDaemon' option.");
+    }
 
-    let supportsDaemon = supportsDaemonInterface && supportsPostBuildHook;
+    let supportsDaemon = supportsDaemonInterface && supportsPostBuildHook && hasPushCredentials;
     core.saveState('supportsDaemon', supportsDaemon);
 
     if (useDaemon && supportsDaemon) {
@@ -202,7 +206,7 @@ async function upload() {
         await exec.exec(`${__dirname}/push-paths.sh`, [cachixBin, cachixArgs, name, pathsToPush, pushFilter]);
       }
     } else {
-      core.info('Pushing is disabled as signingKey nor authToken are set (or are empty?) in your YAML file.');
+      core.info('Pushing is disabled because neither signingKey nor authToken are set (or are empty?) in your YAML file.');
     }
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);

@@ -7816,14 +7816,18 @@ async function setup() {
             core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
         }
         let supportsDaemonInterface = (cachixVersion) ? semver_1.default.gte(cachixVersion, '1.7.0') : false;
-        let supportsPostBuildHook = isTrustedUser();
+        let supportsPostBuildHook = await isTrustedUser();
+        let hasPushCredentials = signingKey !== "" || authToken !== "";
         if (useDaemon && !supportsDaemonInterface) {
             core.warning(`Cachix Daemon is not supported by this version of Cachix (${cachixVersion}). Ignoring the 'useDaemon' option.`);
         }
         if (useDaemon && !supportsPostBuildHook) {
             core.warning("This user is not allowed to set the post-build-hook. Ignoring the 'useDaemon' option.");
         }
-        let supportsDaemon = supportsDaemonInterface && supportsPostBuildHook;
+        if (useDaemon && !hasPushCredentials) {
+            core.warning("No push credentials found. Ignoring the 'useDaemon' option.");
+        }
+        let supportsDaemon = supportsDaemonInterface && supportsPostBuildHook && hasPushCredentials;
         core.saveState('supportsDaemon', supportsDaemon);
         if (useDaemon && supportsDaemon) {
             const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
@@ -7902,7 +7906,7 @@ async function upload() {
             }
         }
         else {
-            core.info('Pushing is disabled as signingKey nor authToken are set (or are empty?) in your YAML file.');
+            core.info('Pushing is disabled because neither signingKey nor authToken are set (or are empty?) in your YAML file.');
         }
     }
     catch (error) {
