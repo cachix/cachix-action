@@ -306,7 +306,7 @@ function getUserConfigDirs(): string[] {
 async function isTrustedUser(): Promise<boolean> {
   try {
     let user = os.userInfo().username;
-    let userGroups = await exec.exec('id', ['-Gn', user]).toString().split(' ');
+    let userGroups = await execToVariable('id', ['-Gn', user]).then((str) => str.trim().split(' '));
 
     let [trustedUsers, trustedGroups] = await fetchTrustedUsers().then(partitionUsersAndGroups);
 
@@ -333,7 +333,7 @@ async function isWritable(path: string): Promise<boolean> {
 
 async function fetchTrustedUsers(): Promise<string[]> {
   try {
-    let conf = await exec.exec('nix show-config').toString();
+    let conf = await execToVariable('nix', ['show-config']);
     let match = conf.match(/trusted-users = (.+);/)
     return match?.length === 2 ? match[1].split(' ') : [];
   } catch (error) {

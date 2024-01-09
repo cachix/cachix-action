@@ -7988,7 +7988,7 @@ function getUserConfigDirs() {
 async function isTrustedUser() {
     try {
         let user = os.userInfo().username;
-        let userGroups = await exec.exec('id', ['-Gn', user]).toString().split(' ');
+        let userGroups = await execToVariable('id', ['-Gn', user]).then((str) => str.trim().split(' '));
         let [trustedUsers, trustedGroups] = await fetchTrustedUsers().then(partitionUsersAndGroups);
         // Chech if Nix is installed in single-user mode.
         let isStoreWritable = isWritable('/nix/store');
@@ -8012,7 +8012,7 @@ async function isWritable(path) {
 }
 async function fetchTrustedUsers() {
     try {
-        let conf = await exec.exec('nix show-config').toString();
+        let conf = await execToVariable('nix', ['show-config']);
         let match = conf.match(/trusted-users = (.+);/);
         return match?.length === 2 ? match[1].split(' ') : [];
     }
