@@ -23,6 +23,7 @@ inputs:
     description: 'Set to true to skip adding cachix cache as a substitute'
   useDaemon:
     description: "Push store paths to the cache as they're built with the Cachix Daemon"
+    default: true
   cachixBin:
     description: 'Provide a custom path to the cachix binary'
   installCommand:
