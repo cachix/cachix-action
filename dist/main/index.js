@@ -7992,10 +7992,15 @@ function getUserConfigDirs() {
 async function isTrustedUser() {
     try {
         let user = os.userInfo().username;
+        core.debug(`Checking if user ${user} is trusted`);
         let userGroups = await execToVariable('id', ['-Gn', user], { silent: true }).then((str) => str.trim().split(' '));
+        core.debug(`User ${user} is in groups ${userGroups}`);
         let [trustedUsers, trustedGroups] = await fetchTrustedUsers().then(partitionUsersAndGroups);
+        core.debug(`Trusted users: ${trustedUsers}`);
+        core.debug(`Trusted groups: ${trustedGroups}`);
         // Chech if Nix is installed in single-user mode.
         let isStoreWritable = isWritable('/nix/store');
+        core.debug(`Is store writable: ${isStoreWritable}`);
         return isStoreWritable
             || trustedUsers.includes(user)
             || trustedGroups.some((group) => userGroups.includes(group));
