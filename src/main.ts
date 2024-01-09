@@ -337,8 +337,8 @@ async function isWritable(path: string): Promise<boolean> {
 
 async function fetchTrustedUsers(): Promise<string[]> {
   try {
-    let conf = await execToVariable('nix', ['show-config'], { silent: true })
-    let match = conf.match(/trusted-users = (.+);/)
+    let conf = await execToVariable('nix', ['show-config'], { silent: true });
+    let match = conf.match(/trusted-users = (.+)/m);
     return match?.length === 2 ? match[1].split(' ') : [];
   } catch (error) {
     core.warning('Failed to read the Nix configuration');
