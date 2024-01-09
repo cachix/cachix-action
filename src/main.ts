@@ -215,14 +215,13 @@ function pidFilePath(daemonDir: string): string {
 }
 
 // Exec a command and return the stdout as a string.
-async function execToVariable(command: string, args: string[]): Promise<string> {
+async function execToVariable(command: string, args?: string[], options?: exec.ExecOptions): Promise<string> {
   let res = '';
+  options = options ?? {};
 
-  const options = {
-    listeners: {
-      stdout: (data: Buffer) => {
-        res += data.toString();
-      },
+  options['listeners'] = {
+    stdout: (data: Buffer) => {
+      res += data.toString();
     },
   };
 
@@ -306,7 +305,7 @@ function getUserConfigDirs(): string[] {
 async function isTrustedUser(): Promise<boolean> {
   try {
     let user = os.userInfo().username;
-    let userGroups = await execToVariable('id', ['-Gn', user]).then((str) => str.trim().split(' '));
+    let userGroups = await execToVariable('id', ['-Gn', user], { silent: true }).then((str) => str.trim().split(' '));
 
     let [trustedUsers, trustedGroups] = await fetchTrustedUsers().then(partitionUsersAndGroups);
 
@@ -333,7 +332,7 @@ async function isWritable(path: string): Promise<boolean> {
 
 async function fetchTrustedUsers(): Promise<string[]> {
   try {
-    let conf = await execToVariable('nix', ['show-config']);
+    let conf = await execToVariable('nix', ['show-config'], { silent: true })
     let match = conf.match(/trusted-users = (.+);/)
     return match?.length === 2 ? match[1].split(' ') : [];
   } catch (error) {

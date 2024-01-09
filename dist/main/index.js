@@ -7913,13 +7913,12 @@ function pidFilePath(daemonDir) {
     return path.join(daemonDir, 'daemon.pid');
 }
 // Exec a command and return the stdout as a string.
-async function execToVariable(command, args) {
+async function execToVariable(command, args, options) {
     let res = '';
-    const options = {
-        listeners: {
-            stdout: (data) => {
-                res += data.toString();
-            },
+    options = options ?? {};
+    options['listeners'] = {
+        stdout: (data) => {
+            res += data.toString();
         },
     };
     return exec.exec(command, args, options).then(() => res);
@@ -7988,7 +7987,7 @@ function getUserConfigDirs() {
 async function isTrustedUser() {
     try {
         let user = os.userInfo().username;
-        let userGroups = await execToVariable('id', ['-Gn', user]).then((str) => str.trim().split(' '));
+        let userGroups = await execToVariable('id', ['-Gn', user], { silent: true }).then((str) => str.trim().split(' '));
         let [trustedUsers, trustedGroups] = await fetchTrustedUsers().then(partitionUsersAndGroups);
         // Chech if Nix is installed in single-user mode.
         let isStoreWritable = isWritable('/nix/store');
@@ -8012,7 +8011,7 @@ async function isWritable(path) {
 }
 async function fetchTrustedUsers() {
     try {
-        let conf = await execToVariable('nix', ['show-config']);
+        let conf = await execToVariable('nix', ['show-config'], { silent: true });
         let match = conf.match(/trusted-users = (.+);/);
         return match?.length === 2 ? match[1].split(' ') : [];
     }
