@@ -100,8 +100,7 @@ async function setup() {
       core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
     }
 
-    // TODO: update the final release bounds
-    let daemonSupported = (cachixVersion) ? semver.gte(cachixVersion, '1.6.0') : false;
+    let daemonSupported = (cachixVersion) ? semver.gte(cachixVersion, '1.7.0') : false;
     core.saveState('daemonSupported', daemonSupported);
 
     if (useDaemon && !daemonSupported) {
