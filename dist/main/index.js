@@ -7814,12 +7814,17 @@ async function setup() {
         if (signingKey !== "") {
             core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
         }
-        let daemonSupported = (cachixVersion) ? semver_1.default.gte(cachixVersion, '1.7.0') : false;
-        core.saveState('daemonSupported', daemonSupported);
-        if (useDaemon && !daemonSupported) {
+        let supportsDaemonInterface = (cachixVersion) ? semver_1.default.gte(cachixVersion, '1.7.0') : false;
+        let supportsPostBuildHook = isTrustedUser();
+        if (useDaemon && !supportsDaemonInterface) {
             core.warning(`Cachix Daemon is not supported by this version of Cachix (${cachixVersion}). Ignoring the 'useDaemon' option.`);
         }
-        if (useDaemon && daemonSupported) {
+        if (useDaemon && !supportsPostBuildHook) {
+            core.warning("This user is not allowed to set the post-build-hook. Ignoring the 'useDaemon' option.");
+        }
+        let supportsDaemon = supportsDaemonInterface && supportsPostBuildHook;
+        core.saveState('supportsDaemon', supportsDaemon);
+        if (useDaemon && supportsDaemon) {
             const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
             const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
             const daemonLog = await fs.open(`${daemonDir}/daemon.log`, 'a');
@@ -7861,13 +7866,13 @@ async function setup() {
 async function upload() {
     core.startGroup('Cachix: push');
     const cachixBin = core.getState('cachixBin');
-    const daemonSupported = core.getState('daemonSupported');
+    const supportsDaemon = core.getState('supportsDaemon');
     try {
         if (skipPush === 'true') {
             core.info('Pushing is disabled as skipPush is set to true');
         }
         else if (signingKey !== "" || authToken !== "") {
-            if (useDaemon && daemonSupported) {
+            if (useDaemon && supportsDaemon) {
                 const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
                 if (!daemonDir) {
                     core.debug('Cachix Daemon not started. Skipping push');
@@ -7979,6 +7984,55 @@ function getUserConfigDirs() {
     const xdgConfigHome = process.env['XDG_CONFIG_HOME'] ?? `${os.homedir()}/.config`;
     const xdgConfigDirs = (process.env['XDG_CONFIG_DIRS'] ?? '/etc/xdg').split(':');
     return [xdgConfigHome, ...xdgConfigDirs];
+}
+async function isTrustedUser() {
+    try {
+        let user = os.userInfo().username;
+        let userGroups = await exec.exec('id', ['-Gn', user]).toString().split(' ');
+        let [trustedUsers, trustedGroups] = await fetchTrustedUsers().then(partitionUsersAndGroups);
+        // Chech if Nix is installed in single-user mode.
+        let isStoreWritable = isWritable('/nix/store');
+        return isStoreWritable
+            || trustedUsers.includes(user)
+            || trustedGroups.some((group) => userGroups.includes(group));
+    }
+    catch (error) {
+        core.warning('Failed to determine if the user is trusted. Assuming untrusted user.');
+        return false;
+    }
+}
+async function isWritable(path) {
+    try {
+        await fs.access(path, fs.constants.W_OK);
+        return true;
+    }
+    catch (error) {
+        return false;
+    }
+}
+async function fetchTrustedUsers() {
+    try {
+        let conf = await exec.exec('nix show-config').toString();
+        let match = conf.match(/trusted-users = (.+);/);
+        return match?.length === 2 ? match[1].split(' ') : [];
+    }
+    catch (error) {
+        core.warning('Failed to read the Nix configuration');
+        return [];
+    }
+}
+function partitionUsersAndGroups(mixedUsers) {
+    let users = [];
+    let groups = [];
+    mixedUsers.forEach((item) => {
+        if (item.startsWith('@')) {
+            groups.push(item.slice(1));
+        }
+        else {
+            users.push(item);
+        }
+    });
+    return [users, groups];
 }
 const isPost = !!core.getState('isPost');
 // Main
