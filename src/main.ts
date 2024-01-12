@@ -19,7 +19,7 @@ const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
 const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
-const useDaemon = (core.getInput('useDaemon') === 'true') ? true : false;
+const useDaemon = core.getBooleanInput('useDaemon');
 const cachixBinInput = core.getInput('cachixBin');
 const installCommand =
   core.getInput('installCommand') ||
@@ -153,7 +153,7 @@ async function upload() {
   core.startGroup('Cachix: push');
 
   const cachixBin = core.getState('cachixBin');
-  const supportsDaemon = core.getState('supportsDaemon');
+  const supportsDaemon = core.getState('supportsDaemon') === 'true';
 
   try {
     if (skipPush === 'true') {
@@ -163,7 +163,7 @@ async function upload() {
         const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
 
         if (!daemonDir) {
-          core.debug('Cachix Daemon not started. Skipping push');
+          core.error('Cachix Daemon not started. Skipping push');
           return;
         }
 
