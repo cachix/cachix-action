@@ -7745,7 +7745,7 @@ const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
 const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
-const useDaemon = (core.getInput('useDaemon') === 'true') ? true : false;
+const useDaemon = core.getBooleanInput('useDaemon');
 const cachixBinInput = core.getInput('cachixBin');
 const installCommand = core.getInput('installCommand') ||
     "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
@@ -7858,7 +7858,7 @@ async function setup() {
 async function upload() {
     core.startGroup('Cachix: push');
     const cachixBin = core.getState('cachixBin');
-    const supportsDaemon = core.getState('supportsDaemon');
+    const supportsDaemon = core.getState('supportsDaemon') === 'true';
     try {
         if (skipPush === 'true') {
             core.info('Pushing is disabled as skipPush is set to true');
@@ -7867,7 +7867,7 @@ async function upload() {
             if (useDaemon && supportsDaemon) {
                 const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
                 if (!daemonDir) {
-                    core.debug('Cachix Daemon not started. Skipping push');
+                    core.error('Cachix Daemon not started. Skipping push');
                     return;
                 }
                 const daemonPid = parseInt(await fs.readFile(pidFilePath(daemonDir), { encoding: 'utf8' }));
