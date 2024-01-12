@@ -7756,19 +7756,6 @@ async function setup() {
         if (cachixBin !== "") {
             core.debug(`Using Cachix executable from input: ${cachixBin}`);
         }
-        else if (useDaemon) {
-            // TODO: remove once stable and the daemon has been released
-            cachixBin = await execToVariable('nix', [
-                'build',
-                '--show-trace',
-                '--print-out-paths',
-                '--accept-flake-config',
-                '--extra-experimental-features',
-                'nix-command flakes',
-                'github:cachix/cachix/feature/daemon',
-            ]).then((storePath) => `${storePath.trimEnd()}/bin/cachix`);
-            core.info(`Daemon mode is enabled. Using the latest Cachix executable from github:cachix/cachix/feature/daemon: ${cachixBin}`);
-        }
         else {
             // Find the Cachix executable in PATH
             let resolvedCachixBin = which_1.default.sync('cachix', { nothrow: true });
