@@ -13,6 +13,7 @@ inputs:
     description: 'Signing key secret retrieved after creating binary cache on https://cachix.org'
   skipPush:
     description: 'Set to true to disable pushing build results to the cache'
+    default: false
   pathsToPush:
     description: 'Whitespace-separated list of paths to push. Leave empty to push every build result.'
   pushFilter:
@@ -21,6 +22,7 @@ inputs:
     description: 'Extra command-line arguments to pass to cachix. If empty, defaults to -j8'
   skipAddingSubstituter:
     description: 'Set to true to skip adding cachix cache as a substitute'
+    default: false
   useDaemon:
     description: "Push store paths to the cache as they're built with the Cachix Daemon"
     default: true
