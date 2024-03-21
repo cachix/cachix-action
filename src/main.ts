@@ -14,12 +14,12 @@ const name = core.getInput('name', { required: true });
 const extraPullNames = core.getInput('extraPullNames');
 const signingKey = core.getInput('signingKey');
 const authToken = core.getInput('authToken')
-const skipPush = core.getBooleanInput('skipPush', { required: true });
+const skipPush = core.getBooleanInput('skipPush');
 const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
-const skipAddingSubstituter = core.getBooleanInput('skipAddingSubstituter', { required: true });
-const useDaemon = core.getBooleanInput('useDaemon', { required: true });
+const skipAddingSubstituter = core.getBooleanInput('skipAddingSubstituter');
+const useDaemon = core.getBooleanInput('useDaemon');
 const cachixBinInput = core.getInput('cachixBin');
 const installCommand =
   core.getInput('installCommand') ||
