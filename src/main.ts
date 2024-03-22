@@ -14,11 +14,11 @@ const name = core.getInput('name', { required: true });
 const extraPullNames = core.getInput('extraPullNames');
 const signingKey = core.getInput('signingKey');
 const authToken = core.getInput('authToken')
-const skipPush = core.getInput('skipPush');
+const skipPush = core.getBooleanInput('skipPush');
 const pathsToPush = core.getInput('pathsToPush');
 const pushFilter = core.getInput('pushFilter');
 const cachixArgs = core.getInput('cachixArgs');
-const skipAddingSubstituter = core.getInput('skipAddingSubstituter');
+const skipAddingSubstituter = core.getBooleanInput('skipAddingSubstituter');
 const useDaemon = core.getBooleanInput('useDaemon');
 const cachixBinInput = core.getInput('cachixBin');
 const installCommand =
@@ -64,7 +64,7 @@ async function setup() {
       await exec.exec(cachixBin, ['authtoken', authToken]);
     }
 
-    if (skipAddingSubstituter === 'true') {
+    if (skipAddingSubstituter) {
       core.info('Not adding Cachix cache to substituters as skipAddingSubstituter is set to true')
     } else {
       core.startGroup(`Cachix: using cache ` + name);
@@ -156,7 +156,7 @@ async function upload() {
   const supportsDaemon = core.getState('supportsDaemon') === 'true';
 
   try {
-    if (skipPush === 'true') {
+    if (skipPush) {
       core.info('Pushing is disabled as skipPush is set to true');
     } else if (signingKey !== "" || authToken !== "") {
       if (useDaemon && supportsDaemon) {
