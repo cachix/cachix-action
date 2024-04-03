@@ -113,6 +113,7 @@ async function setup() {
           'daemon', 'run',
           '--socket', `${daemonDir}/daemon.sock`,
           name,
+          ...cachixArgs.split(' ').filter((arg) => arg !== ''),
         ],
         {
           stdio: ['ignore', daemonLog, daemonLog],
