@@ -7799,8 +7799,8 @@ async function setup() {
     if (signingKey !== "") {
         core.exportVariable('CACHIX_SIGNING_KEY', signingKey);
     }
-    let hasPushCredentials = signingKey !== "" || authToken !== "";
-    core.saveState('hasPushCredentials', hasPushCredentials);
+    let hasPushTokens = signingKey !== "" || authToken !== "";
+    core.saveState('hasPushTokens', hasPushTokens);
     if (skipAddingSubstituter) {
         core.info('Not adding Cachix cache to substituters as skipAddingSubstituter is set to true');
     }
@@ -7820,7 +7820,7 @@ async function setup() {
     }
     // Determine the push mode to use
     let pushMode = PushMode.None;
-    if (hasPushCredentials && !skipPush) {
+    if (hasPushTokens && !skipPush) {
         if (useDaemon) {
             let supportsDaemonInterface = (cachixVersion) ? semver_1.default.gte(cachixVersion, '1.7.0') : false;
             let supportsPostBuildHook = await isTrustedUser();
@@ -7885,9 +7885,13 @@ async function upload() {
     const pushMode = core.getState('pushMode');
     switch (pushMode) {
         case PushMode.None: {
+            core.info("Pushing is disabled.");
+            const hasPushTokens = !!core.getState('hasPushTokens');
             if (skipPush) {
-                core.info('Pushing is disabled as skipPush is set to true');
-                break;
+                core.info('skipPush is enabled.');
+            }
+            else if (!hasPushTokens) {
+                core.info('Missing a Cachix auth token. Provide an authToken and/or signingKey to enable pushing to the cache.');
             }
             break;
         }
@@ -7895,12 +7899,12 @@ async function upload() {
             const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
             if (!daemonDir) {
                 core.error('Cachix Daemon not started. Skipping push');
-                return;
+                break;
             }
             const daemonPid = parseInt(await fs.readFile(pidFilePath(daemonDir), { encoding: 'utf8' }));
             if (!daemonPid) {
                 core.error('Failed to find PID of Cachix Daemon. Skipping push.');
-                return;
+                break;
             }
             core.debug(`Found Cachix daemon with pid ${daemonPid}`);
             let daemonLog = new tail_1.Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
