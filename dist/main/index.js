@@ -7973,7 +7973,7 @@ async function registerPostBuildHook(cachixBin, daemonDir) {
       done | xargs
     }
 
-    if [[ -n $PUSH_FILTER ]]; then
+    if [ -n "$PUSH_FILTER" ]; then
       OUT_PATHS=$(filterPaths $PUSH_FILTER "$OUT_PATHS")
     fi
 
