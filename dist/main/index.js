@@ -7754,6 +7754,8 @@ var PushMode;
 (function (PushMode) {
     // Disable pushing entirely.
     PushMode["None"] = "None";
+    // Push paths provided via the `pathsToPush` input.
+    PushMode["PushPaths"] = "PushPaths";
     // Scans the entire store during the pre- and post-hooks and uploads the difference.
     // This is a very simple method and is likely to work in any environment.
     // There are two downsides:
@@ -7821,7 +7823,10 @@ async function setup() {
     // Determine the push mode to use
     let pushMode = PushMode.None;
     if (hasPushTokens && !skipPush) {
-        if (useDaemon) {
+        if (pathsToPush) {
+            pushMode = PushMode.PushPaths;
+        }
+        else if (useDaemon) {
             let supportsDaemonInterface = (cachixVersion) ? semver_1.default.gte(cachixVersion, '1.7.0') : false;
             let supportsPostBuildHook = await isTrustedUser();
             if (!supportsDaemonInterface) {
@@ -7895,6 +7900,10 @@ async function upload() {
             }
             break;
         }
+        case PushMode.PushPaths: {
+            await exec.exec(cachixBin, ["push", cachixArgs, name, pathsToPush]);
+            break;
+        }
         case PushMode.Daemon: {
             const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
             if (!daemonDir) {
@@ -7921,7 +7930,7 @@ async function upload() {
             break;
         }
         case PushMode.StoreScan: {
-            await exec.exec(`${__dirname}/push-paths.sh`, [cachixBin, cachixArgs, name, pathsToPush, pushFilter]);
+            await exec.exec(`${__dirname}/push-paths.sh`, [cachixBin, cachixArgs, name, pushFilter]);
             break;
         }
     }

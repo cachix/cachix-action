@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cachix=$1 cachixArgs=${2:--j8} cache=$3 pathsToPush=$4 pushFilter=$5
+cachix=$1 cachixArgs=${2:--j8} cache=$3 pushFilter=$4
 
 filterPaths() {
   local regex=$1
@@ -12,12 +12,10 @@ filterPaths() {
   done | xargs
 }
 
-if [[ -z $pathsToPush ]]; then
-    pathsToPush=$(comm -13 <(sort /tmp/store-path-pre-build) <("$(dirname "$0")"/list-nix-store.sh))
+pathsToPush=$(comm -13 <(sort /tmp/store-path-pre-build) <("$(dirname "$0")"/list-nix-store.sh))
 
-    if [[ -n $pushFilter ]]; then
-        pathsToPush=$(filterPaths $pushFilter "$pathsToPush")
-    fi
+if [[ -n $pushFilter ]]; then
+    pathsToPush=$(filterPaths $pushFilter "$pathsToPush")
 fi
 
 echo "$pathsToPush" | "$cachix" push $cachixArgs "$cache"
