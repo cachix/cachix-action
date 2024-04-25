@@ -283,8 +283,17 @@ async function registerPostBuildHook(cachixBin: string, daemonDir: string) {
 
     PUSH_FILTER="${pushFilter}"
 
-    if [ -n "$PUSH_FILTER" ]; then
-      OUT_PATHS=$(echo "$OUT_PATHS" | grep -vEe "$PUSH_FILTER")
+    function filterPaths {
+      local regex=$1
+      local paths=$2
+
+      for path in $paths; do
+        echo $path | grep -vEe $regex
+      done | xargs
+    }
+
+    if [[ -n $PUSH_FILTER ]]; then
+      OUT_PATHS=$(filterPaths $PUSH_FILTER "$OUT_PATHS")
     fi
 
     exec ${cachixBin} daemon push \
