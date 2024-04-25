@@ -1,10 +1,10 @@
 # Realizes <num>> of derivations with size of <size>MB
 { size ? 1 # MB
-, num ? 10 # count 
+, num ? 10 # count
 , currentTime ? builtins.currentTime
 }:
 
-with (import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/21d8e70a69f704a6ab971b2d8265d40cc7bb69b1.tar.gz") {});
+with (import (fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-23.11") {});
 
 let
   drv = i: runCommand "${toString currentTime}-${toString i}" {} ''
