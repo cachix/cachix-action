@@ -7962,6 +7962,12 @@ async function registerPostBuildHook(cachixBin, daemonDir) {
     set -eu
     set -f # disable globbing
 
+    PUSH_FILTER="${pushFilter}"
+
+    if [ -n "$PUSH_FILTER" ]; then
+      OUT_PATHS=$(echo "$OUT_PATHS" | grep -vEe "$PUSH_FILTER")
+    fi
+
     exec ${cachixBin} daemon push \
       --socket ${daemonDir}/daemon.sock \
       $OUT_PATHS
