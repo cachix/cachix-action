@@ -7957,14 +7957,14 @@ async function execToVariable(command, args, options) {
 async function registerPostBuildHook(cachixBin, daemonDir) {
     const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
     await fs.writeFile(postBuildHookScriptPath, `
-    #!/bin/sh
+    #!/usr/bin/env bash
 
     set -eu
     set -f # disable globbing
 
     PUSH_FILTER="${pushFilter}"
 
-    function filterPaths {
+    filterPaths() {
       local regex=$1
       local paths=$2
 
