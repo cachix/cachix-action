@@ -276,10 +276,25 @@ async function execToVariable(command: string, args?: string[], options?: exec.E
 async function registerPostBuildHook(cachixBin: string, daemonDir: string) {
   const postBuildHookScriptPath = `${daemonDir}/post-build-hook.sh`;
   await fs.writeFile(postBuildHookScriptPath, `
-    #!/bin/sh
+    #!/usr/bin/env bash
 
     set -eu
     set -f # disable globbing
+
+    PUSH_FILTER="${pushFilter}"
+
+    filterPaths() {
+      local regex=$1
+      local paths=$2
+
+      for path in $paths; do
+        echo $path | grep -vEe $regex
+      done | xargs
+    }
+
+    if [ -n "$PUSH_FILTER" ]; then
+      OUT_PATHS=$(filterPaths $PUSH_FILTER "$OUT_PATHS")
+    fi
 
     exec ${cachixBin} daemon push \
       --socket ${daemonDir}/daemon.sock \
