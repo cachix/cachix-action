@@ -87,8 +87,7 @@ jobs:
       uses: ./
       with:
         name: cachix-action
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}'
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
         pathsToPush: '${{ steps.paths.outputs.OUT_PATHS }}'
 
   installCommand:
