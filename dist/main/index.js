@@ -7901,7 +7901,7 @@ async function upload() {
             break;
         }
         case PushMode.PushPaths: {
-            await exec.exec(cachixBin, ["push", cachixArgs, name, pathsToPush]);
+            await exec.exec(cachixBin, ["push", ...cachixArgs.split(' '), name, ...pathsToPush.split(' ')]);
             break;
         }
         case PushMode.Daemon: {
