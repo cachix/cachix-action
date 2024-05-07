@@ -7851,7 +7851,7 @@ async function setup() {
                 'daemon', 'run',
                 '--socket', `${daemonDir}/daemon.sock`,
                 name,
-                ...cachixArgs.split(' ').filter((arg) => arg !== ''),
+                ...splitArgs(cachixArgs),
             ], {
                 stdio: ['ignore', daemonLog, daemonLog],
                 detached: true,
@@ -7901,7 +7901,7 @@ async function upload() {
             break;
         }
         case PushMode.PushPaths: {
-            await exec.exec(cachixBin, ["push", ...cachixArgs.split(' '), name, ...pathsToPush.split(' ')]);
+            await exec.exec(cachixBin, ["push", ...splitArgs(cachixArgs), name, ...splitArgs(pathsToPush)]);
             break;
         }
         case PushMode.Daemon: {
@@ -8082,6 +8082,9 @@ function partitionUsersAndGroups(mixedUsers) {
         }
     });
     return [users, groups];
+}
+function splitArgs(args) {
+    return args.split(' ').filter((arg) => arg !== '');
 }
 const isPost = !!core.getState('isPost');
 // Main
