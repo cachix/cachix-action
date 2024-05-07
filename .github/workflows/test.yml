@@ -69,6 +69,27 @@ jobs:
         useDaemon: ${{ matrix.useDaemon }}
     - run: nix-build test.nix
 
+  push-paths:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - run: yarn install --frozen-lockfile
+    - run: yarn build
+    - uses: cachix/install-nix-action@v26
+    - id: paths
+      run: |
+        paths=$(nix-instantiate test.nix | tr '\n' ' ')
+        echo "OUT_PATHS=$paths" >> $GITHUB_OUTPUT
+    - name: Test pushPaths
+      uses: ./
+      with:
+        name: cachix-action
+        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+        pathsToPush: '${{ steps.paths.outputs.OUT_PATHS }}'
+
   installCommand:
     strategy:
       matrix:

@@ -30,6 +30,8 @@ const ENV_CACHIX_DAEMON_DIR = 'CACHIX_DAEMON_DIR';
 enum PushMode {
   // Disable pushing entirely.
   None = 'None',
+  // Push paths provided via the `pathsToPush` input.
+  PushPaths = 'PushPaths',
   // Scans the entire store during the pre- and post-hooks and uploads the difference.
   // This is a very simple method and is likely to work in any environment.
   // There are two downsides:
@@ -107,7 +109,9 @@ async function setup() {
   let pushMode = PushMode.None;
 
   if (hasPushTokens && !skipPush) {
-    if (useDaemon) {
+    if (pathsToPush) {
+      pushMode = PushMode.PushPaths;
+    } else if (useDaemon) {
       let supportsDaemonInterface = (cachixVersion) ? semver.gte(cachixVersion, '1.7.0') : false;
       let supportsPostBuildHook = await isTrustedUser();
 
@@ -138,7 +142,7 @@ async function setup() {
           'daemon', 'run',
           '--socket', `${daemonDir}/daemon.sock`,
           name,
-          ...cachixArgs.split(' ').filter((arg) => arg !== ''),
+          ...splitArgs(cachixArgs),
         ],
         {
           stdio: ['ignore', daemonLog, daemonLog],
@@ -169,6 +173,7 @@ async function setup() {
 
       break;
     }
+
     case PushMode.StoreScan: {
       // Remember existing store paths
       await exec.exec("sh", ["-c", `${__dirname}/list-nix-store.sh > /tmp/store-path-pre-build`]);
@@ -200,6 +205,12 @@ async function upload() {
 
       break;
     }
+
+    case PushMode.PushPaths: {
+      await exec.exec(cachixBin, ["push", ...splitArgs(cachixArgs), name, ...splitArgs(pathsToPush)]);
+      break;
+    }
+
     case PushMode.Daemon: {
       const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
 
@@ -233,7 +244,7 @@ async function upload() {
     }
 
     case PushMode.StoreScan: {
-      await exec.exec(`${__dirname}/push-paths.sh`, [cachixBin, cachixArgs, name, pathsToPush, pushFilter]);
+      await exec.exec(`${__dirname}/push-paths.sh`, [cachixBin, cachixArgs, name, pushFilter]);
       break;
     }
   }
@@ -412,6 +423,10 @@ function partitionUsersAndGroups(mixedUsers: string[]): [string[], string[]] {
   });
 
   return [users, groups];
+}
+
+function splitArgs(args: string): string[] {
+  return args.split(' ').filter((arg) => arg !== '');
 }
 
 const isPost = !!core.getState('isPost');
