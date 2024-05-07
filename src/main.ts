@@ -130,9 +130,10 @@ async function setup() {
 
   core.saveState('pushMode', pushMode);
 
+  const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
+
   switch (pushMode) {
     case PushMode.Daemon: {
-      const tmpdir = process.env['RUNNER_TEMP'] ?? os.tmpdir();
       const daemonDir = await fs.mkdtemp(path.join(tmpdir, 'cachix-daemon-'));
       const daemonLog = openSync(`${daemonDir}/daemon.log`, 'a');
 
@@ -176,7 +177,9 @@ async function setup() {
 
     case PushMode.StoreScan: {
       // Remember existing store paths
-      await exec.exec("sh", ["-c", `${__dirname}/list-nix-store.sh > /tmp/store-path-pre-build`]);
+      const preBuildPathsFile = `${tmpdir}/store-path-pre-build`;
+      core.saveState('preBuildPathsFile', preBuildPathsFile);
+      await exec.exec("sh", ["-c", `${__dirname}/list-nix-store.sh > ${preBuildPathsFile}`]);
       break;
     }
 
@@ -244,7 +247,8 @@ async function upload() {
     }
 
     case PushMode.StoreScan: {
-      await exec.exec(`${__dirname}/push-paths.sh`, [cachixBin, cachixArgs, name, pushFilter]);
+      const preBuildPathsFile = core.getState('preBuildPathsFile');
+      await exec.exec(`${__dirname}/push-paths.sh`, [cachixBin, cachixArgs, name, preBuildPathsFile, pushFilter]);
       break;
     }
   }

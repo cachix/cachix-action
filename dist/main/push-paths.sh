@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cachix=$1 cachixArgs=${2:--j8} cache=$3 pushFilter=$4
+cachix=$1 cachixArgs=${2:--j8} cache=$3 preBuildPathsFile=$4 pushFilter=$5
 
 filterPaths() {
   local regex=$1
@@ -13,7 +13,7 @@ filterPaths() {
 }
 
 pathsToPush=""
-preBuildPaths=$(sort /tmp/store-path-pre-build)
+preBuildPaths=$(sort "$preBuildPathsFile")
 if [ $? -eq 0 ]; then
   postBuildPaths=$("$(dirname "$0")"/list-nix-store.sh | sort)
   if [ $? -eq 0 ]; then
@@ -22,7 +22,7 @@ if [ $? -eq 0 ]; then
     echo "::error::Failed to list post-build store paths."
   fi
 else
-  echo "::error::Failed to find pre-build store paths."
+  printf "::error::Failed to find pre-build store paths. Expected cached paths in %s\n" "$preBuildPathsFile"
 fi
 
 if [[ -n $pushFilter ]]; then
