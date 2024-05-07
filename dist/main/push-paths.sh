@@ -12,10 +12,21 @@ filterPaths() {
   done | xargs
 }
 
-pathsToPush=$(comm -13 <(sort /tmp/store-path-pre-build) <("$(dirname "$0")"/list-nix-store.sh))
+pathsToPush=""
+preBuildPaths=$(sort /tmp/store-path-pre-build)
+if [ $? -eq 0 ]; then
+  postBuildPaths=$("$(dirname "$0")"/list-nix-store.sh | sort)
+  if [ $? -eq 0 ]; then
+    pathsToPush=$(comm -13 <(echo "$preBuildPaths") <(echo "$postBuildPaths"))
+  else
+    echo "::error::Failed to list post-build store paths."
+  fi
+else
+  echo "::error::Failed to find pre-build store paths."
+fi
 
 if [[ -n $pushFilter ]]; then
-    pathsToPush=$(filterPaths $pushFilter "$pathsToPush")
+  pathsToPush=$(filterPaths $pushFilter "$pathsToPush")
 fi
 
 echo "$pathsToPush" | "$cachix" push $cachixArgs "$cache"
