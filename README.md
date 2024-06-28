@@ -22,17 +22,16 @@ See [action.yml](action.yml) for all options.
 
 Cachix auth token and signing key need special care as they give read and write access to your caches.
 
-[As per GitHub Actions' security model](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets#using-encrypted-secrets-in-a-workflow):
+[As per GitHub Actions' security model](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions#accessing-your-secrets):
 
-> Anyone with write access to a repository can create, read, and use secrets.
+> You can use and read secrets in a workflow file if you have access to edit the file.
 
-Which means all developers with write/push access can read your secrets and write to your cache. 
+Which means all developers with write/push access can read your secrets and write to your cache.
 
-Pull requests do not have access to secrets so read access to a public binary cache will work,
+Pull requests from forks do not have access to secrets so read access to a public binary cache will work,
 but pushing will be disabled since there is no signing key.
 
-Note that malicious code submitted via a pull request can, once merged into `master`, reveal the tokens. 
-
+Note that malicious code submitted via forked pull request can, once merged into `master`, reveal tokens.
 
 ## Hacking
 
