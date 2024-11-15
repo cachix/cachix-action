@@ -1,15 +1,20 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 
 let
-  node = pkgs.nodejs_20;
+  nodePackages = config.languages.javascript.package.pkgs;
 in
 {
   packages = [
     pkgs.act
-    pkgs.yarn
-    node
-    node.pkgs.typescript-language-server
+    nodePackages.typescript-language-server
   ];
 
   languages.typescript.enable = true;
+
+  languages.javascript = {
+    enable = true;
+    package = pkgs.nodejs_20;
+    yarn.enable = true;
+    yarn.install.enable = true;
+  };
 }
