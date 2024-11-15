@@ -128,6 +128,7 @@ jobs:
     - uses: cachix/install-nix-action@V30
       with:
         install_url: ${{ steps.latest_installer.outputs.install_url }}
+        install_options: '--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve'
 
     - run: yarn install --frozen-lockfile
     - run: yarn build
