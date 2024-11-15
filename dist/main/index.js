@@ -7920,13 +7920,15 @@ async function upload() {
             core.debug(`Found Cachix daemon with pid ${daemonPid}`);
             let daemonLog = new tail_1.Tail(`${daemonDir}/daemon.log`, { fromBeginning: true });
             daemonLog.on('line', (line) => core.info(line));
+            // Give the Nix daemon time to send out the post-build hooks
+            await sleep(300);
             try {
                 core.debug('Waiting for Cachix daemon to exit...');
                 await exec.exec(cachixBin, ["daemon", "stop", "--socket", `${daemonDir}/daemon.sock`]);
             }
             finally {
                 // Wait a bit for the logs to flush through
-                await new Promise((resolve) => setTimeout(resolve, 1000));
+                await sleep(1000);
                 daemonLog.unwatch();
             }
             break;
@@ -8088,6 +8090,9 @@ function partitionUsersAndGroups(mixedUsers) {
 }
 function splitArgs(args) {
     return args.split(' ').filter((arg) => arg !== '');
+}
+async function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 const isPost = !!core.getState('isPost');
 // Main
