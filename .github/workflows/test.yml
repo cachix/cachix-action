@@ -122,7 +122,7 @@ jobs:
         build_id=$(curl --header 'Accept: application/json' --location --silent \
           https://hydra.nixos.org/job/nix/master/installerScript/latest-finished \
           | jq -r '.id')
-        install_url="https:://hydra.nixos.org/build/$build_id/download/1/install"
+        install_url="https://hydra.nixos.org/build/$build_id/download/1/install"
         echo "install_url=$install_url" >> $GITHUB_OUTPUT
 
     - uses: cachix/install-nix-action@V30
