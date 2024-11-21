@@ -16,19 +16,19 @@ jobs:
         useDaemon: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - run: yarn install --frozen-lockfile
-    - run: yarn build
-    # check if typescript generation was committed
-    - run: git diff --exit-code
-    - uses: cachix/install-nix-action@v30
-    - name: Test public cache
-      uses: ./
-      with:
-        name: cachix-action
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        useDaemon: ${{ matrix.useDaemon }}
-    - run: nix-build test.nix
+      - uses: actions/checkout@v4
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      # check if typescript generation was committed
+      - run: git diff --exit-code
+      - uses: cachix/install-nix-action@v30
+      - name: Test public cache
+        uses: ./
+        with:
+          name: cachix-action
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
+          useDaemon: ${{ matrix.useDaemon }}
+      - run: nix-build test.nix
 
   public-cache-no-signing-key:
     strategy:
@@ -37,16 +37,16 @@ jobs:
         useDaemon: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - run: yarn install --frozen-lockfile
-    - run: yarn build
-    - uses: cachix/install-nix-action@v30
-    - name: Test public cache no signing key
-      uses: ./
-      with:
-        name: cachix-action
-        useDaemon: ${{ matrix.useDaemon }}
-    - run: nix-build test.nix
+      - uses: actions/checkout@v4
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - uses: cachix/install-nix-action@v30
+      - name: Test public cache no signing key
+        uses: ./
+        with:
+          name: cachix-action
+          useDaemon: ${{ matrix.useDaemon }}
+      - run: nix-build test.nix
 
   private-cache:
     if: ${{ github.ref == 'refs/heads/master' }}
@@ -56,18 +56,18 @@ jobs:
         useDaemon: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - run: yarn install --frozen-lockfile
-    - run: yarn build
-    - uses: cachix/install-nix-action@v30
-    - name: Test private cache
-      uses: ./
-      with:
-        name: cachix-action-private
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}'
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-        useDaemon: ${{ matrix.useDaemon }}
-    - run: nix-build test.nix
+      - uses: actions/checkout@v4
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - uses: cachix/install-nix-action@v30
+      - name: Test private cache
+        uses: ./
+        with:
+          name: cachix-action-private
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}"
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          useDaemon: ${{ matrix.useDaemon }}
+      - run: nix-build test.nix
 
   push-paths:
     strategy:
@@ -75,20 +75,20 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - run: yarn install --frozen-lockfile
-    - run: yarn build
-    - uses: cachix/install-nix-action@v30
-    - id: paths
-      run: |
-        paths=$(nix-instantiate test.nix | tr '\n' ' ')
-        echo "OUT_PATHS=$paths" >> $GITHUB_OUTPUT
-    - name: Test pushPaths
-      uses: ./
-      with:
-        name: cachix-action
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        pathsToPush: '${{ steps.paths.outputs.OUT_PATHS }}'
+      - uses: actions/checkout@v4
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - uses: cachix/install-nix-action@v30
+      - id: paths
+        run: |
+          paths=$(nix-instantiate test.nix | tr '\n' ' ')
+          echo "OUT_PATHS=$paths" >> $GITHUB_OUTPUT
+      - name: Test pushPaths
+        uses: ./
+        with:
+          name: cachix-action
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
+          pathsToPush: "${{ steps.paths.outputs.OUT_PATHS }}"
 
   installCommand:
     strategy:
@@ -96,17 +96,17 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - run: yarn install --frozen-lockfile
-    - run: yarn build
-    - uses: cachix/install-nix-action@v30
-    - name: Test private cache
-      uses: ./
-      with:
-        name: cachix-action
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-        installCommand: 'nix-env -j8 -f https://cachix.org/api/v1/install -iA cachix'
-    - run: nix-build test.nix
+      - uses: actions/checkout@v4
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - uses: cachix/install-nix-action@v30
+      - name: Test private cache
+        uses: ./
+        with:
+          name: cachix-action
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
+          installCommand: "nix-env -j8 -f https://cachix.org/api/v1/install -iA cachix"
+      - run: nix-build test.nix
 
   nix-master:
     strategy:
@@ -114,18 +114,18 @@ jobs:
         os: [ubuntu-latest, macos-13]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Install Nix
-      uses: cachix/install-nix-action@v30
-      with:
-        nix_path: nixpkgs=channel:nixos-22.11
-        install_url: https://nixos-nix-install-tests.cachix.org/serve/kkq45x7yrzvxq8627fi6hkswnfa7mg2l/install
-        install_options: '--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve'
-    - run: yarn install --frozen-lockfile
-    - run: yarn build
-    - name: Test public cache
-      uses: ./
-      with:
-        name: cachix-action
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-    - run: nix-build test.nix
+      - uses: actions/checkout@v4
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-22.11
+          install_url: https://nixos-nix-install-tests.cachix.org/serve/kkq45x7yrzvxq8627fi6hkswnfa7mg2l/install
+          install_options: "--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve"
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+      - name: Test public cache
+        uses: ./
+        with:
+          name: cachix-action
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
+      - run: nix-build test.nix
