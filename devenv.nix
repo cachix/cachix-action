@@ -28,5 +28,11 @@ in
       excludes = [ "dist" ];
     };
     nixfmt-rfc-style.enable = true;
+    build-dist = {
+      enable = true;
+      files = "src/.*$";
+      pass_filenames = false;
+      entry = "devenv shell yarn build";
+    };
   };
 }
