@@ -35,17 +35,20 @@ Note that malicious code submitted via forked pull request can, once merged into
 
 ## Hacking
 
-Install the dependencies  
+Install the dependencies
+
 ```bash
 $ yarn install
 ```
 
 Build the typescript
+
 ```bash
 $ yarn build
 ```
 
-Run the tests :heavy_check_mark:  
+Run the tests :heavy_check_mark:
+
 ```bash
 $ yarn test
 ```

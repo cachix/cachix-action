@@ -21,4 +21,12 @@ in
     yarn.enable = true;
     yarn.install.enable = true;
   };
+
+  git-hooks.hooks = {
+    prettier = {
+      enable = true;
+      excludes = [ "dist" ];
+    };
+    nixfmt-rfc-style.enable = true;
+  };
 }

@@ -1,10 +1,13 @@
-{ arg ? null }:
+{
+  arg ? null,
+}:
 
-with import <nixpkgs> {};
+with import <nixpkgs> { };
 
-if arg == null
-then abort "arg is not set"
-else writeText "test-with-arg" ''
-  ${toString builtins.currentTime}
-  ${arg}
-''
+if arg == null then
+  abort "arg is not set"
+else
+  writeText "test-with-arg" ''
+    ${toString builtins.currentTime}
+    ${arg}
+  ''

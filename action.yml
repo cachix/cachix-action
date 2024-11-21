@@ -1,39 +1,39 @@
-name: 'Cachix'
-description: 'nix-build with the help of caching to Cachix'
-author: 'Domen Kožar'
+name: "Cachix"
+description: "nix-build with the help of caching to Cachix"
+author: "Domen Kožar"
 inputs:
   name:
-    description: 'Name of a cachix cache to push and pull/substitute'
+    description: "Name of a cachix cache to push and pull/substitute"
     required: true
   extraPullNames:
-    description: 'Comma-separated list of names for extra cachix caches to pull/substitute'
+    description: "Comma-separated list of names for extra cachix caches to pull/substitute"
   authToken:
-    description: 'Authentication token for Cachix, needed for private cache access or to push using an Auth Token'
+    description: "Authentication token for Cachix, needed for private cache access or to push using an Auth Token"
   signingKey:
-    description: 'Signing key secret retrieved after creating binary cache on https://cachix.org'
+    description: "Signing key secret retrieved after creating binary cache on https://cachix.org"
   skipPush:
-    description: 'Set to true to disable pushing build results to the cache'
-    default: 'false'
+    description: "Set to true to disable pushing build results to the cache"
+    default: "false"
   pathsToPush:
-    description: 'Whitespace-separated list of paths to push. Leave empty to push every build result.'
+    description: "Whitespace-separated list of paths to push. Leave empty to push every build result."
   pushFilter:
     description: 'Ignored if pathsToPush is set. Regular expression to exclude derivations for the cache push, for example "(-source$|nixpkgs\.tar\.gz$)". Warning: this filter does not guarantee it will not get pushed in case the path is part of the closure of something that will get pushed.'
   cachixArgs:
-    description: 'Extra command-line arguments to pass to cachix. If empty, defaults to -j8'
+    description: "Extra command-line arguments to pass to cachix. If empty, defaults to -j8"
   skipAddingSubstituter:
-    description: 'Set to true to skip adding cachix cache as a substitute'
-    default: 'false'
+    description: "Set to true to skip adding cachix cache as a substitute"
+    default: "false"
   useDaemon:
     description: "Push store paths to the cache as they're built with the Cachix Daemon"
-    default: 'true'
+    default: "true"
   cachixBin:
-    description: 'Provide a custom path to the cachix binary'
+    description: "Provide a custom path to the cachix binary"
   installCommand:
-    description: 'Override the default cachix installation method'
+    description: "Override the default cachix installation method"
 branding:
-  color: 'blue'
-  icon: 'database'
+  color: "blue"
+  icon: "database"
 runs:
-  using: 'node20'
-  main: 'dist/main/index.js'
-  post: 'dist/main/index.js'
+  using: "node20"
+  main: "dist/main/index.js"
+  post: "dist/main/index.js"
