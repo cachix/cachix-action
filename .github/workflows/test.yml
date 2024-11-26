@@ -111,22 +111,33 @@ jobs:
   nix-master:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-13]
+        include:
+          - os: ubuntu-latest
+            system: x86_64-linux
+          - os: macos-13
+            system: x86_64-darwin
+          - os: macos-latest
+            system: aarch64-darwin
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: cachix/install-nix-action@v30
-      with:
-        install_url: https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install
-        install_options: '--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve'
+      - name: Run NAR server
+        run: |
+          curl --location https://github.com/sandydoo/nar-toolbox/releases/download/v0.1.0/nar-toolbox-${{ matrix.system }} -O
+          ./nar-toolbox-${{ matrix.system }} serve &
 
-    - run: yarn install --frozen-lockfile
-    - run: yarn build
+      - uses: cachix/install-nix-action@v30
+        with:
+          install_url: https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install
+          install_options: "--tarball-url-prefix https://localhost:8080"
 
-    - name: Test public cache
-      uses: ./
-      with:
-        name: cachix-action
-        signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
-    - run: nix-build test.nix
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+
+      - name: Test public cache
+        uses: ./
+        with:
+          name: cachix-action
+          signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
+      - run: nix-build test.nix
