@@ -125,6 +125,7 @@ jobs:
       - name: Run NAR server
         run: |
           curl --location https://github.com/sandydoo/nar-toolbox/releases/download/v0.1.0/nar-toolbox-${{ matrix.system }} -O
+          chmod +x ./nar-toolbox-${{ matrix.system }}
           ./nar-toolbox-${{ matrix.system }} serve &
 
       - uses: cachix/install-nix-action@v30
