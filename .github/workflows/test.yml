@@ -130,7 +130,7 @@ jobs:
       - uses: cachix/install-nix-action@v30
         with:
           install_url: https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install
-          install_options: "--tarball-url-prefix https://localhost:8080"
+          install_options: "--tarball-url-prefix http://localhost:8080"
 
       - run: yarn install --frozen-lockfile
       - run: yarn build
