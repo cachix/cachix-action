@@ -5,7 +5,7 @@
   currentTime ? builtins.currentTime,
 }:
 
-with (import (fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-23.11") { });
+with (import (fetchTarball "https://github.com/NixOS/nixpkgs/tarball/nixos-24.11") { });
 
 let
   drv =
