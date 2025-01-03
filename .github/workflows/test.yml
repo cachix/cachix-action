@@ -17,8 +17,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       # check if typescript generation was committed
       - run: git diff --exit-code
       - uses: cachix/install-nix-action@v30
@@ -38,8 +38,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - uses: cachix/install-nix-action@v30
       - name: Test public cache no signing key
         uses: ./
@@ -57,8 +57,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - uses: cachix/install-nix-action@v30
       - name: Test private cache
         uses: ./
@@ -76,8 +76,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - uses: cachix/install-nix-action@v30
       - id: paths
         run: |
@@ -97,8 +97,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - uses: cachix/install-nix-action@v30
       - name: Test private cache
         uses: ./
@@ -133,8 +133,8 @@ jobs:
           install_url: https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install
           install_options: "--tarball-url-prefix http://localhost:8080"
 
-      - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
 
       - name: Test public cache
         uses: ./
