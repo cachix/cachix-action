@@ -497,20 +497,21 @@ function waitFor(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const isPost = !!core.getState("isPost");
+export async function run(): Promise<void> {
+  const isPost = !!core.getState("isPost");
 
-// Main
-try {
-  if (!isPost) {
-    // Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
-    // This is necessary since we don't have a separate entry point.
-    core.saveState("isPost", "true");
-    setup();
-    core.debug("Setup done");
-  } else {
-    // Post
-    upload();
+  try {
+    if (!isPost) {
+      // Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
+      // This is necessary since we don't have a separate entry point.
+      core.saveState("isPost", "true");
+      setup();
+      core.debug("Setup done");
+    } else {
+      // Post
+      upload();
+    }
+  } catch (error) {
+    core.setFailed(`Action failed with error: ${error}`);
   }
-} catch (error) {
-  core.setFailed(`Action failed with error: ${error}`);
 }

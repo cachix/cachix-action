@@ -1,4 +1,4 @@
-/******/ (() => { // webpackBootstrap
+require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 4914:
@@ -28734,6 +28734,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const exec = __importStar(__nccwpck_require__(5236));
 const node_child_process_1 = __nccwpck_require__(1421);
@@ -29134,23 +29135,24 @@ function splitArgs(args) {
 function waitFor(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
-const isPost = !!core.getState("isPost");
-// Main
-try {
-    if (!isPost) {
-        // Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
-        // This is necessary since we don't have a separate entry point.
-        core.saveState("isPost", "true");
-        setup();
-        core.debug("Setup done");
+async function run() {
+    const isPost = !!core.getState("isPost");
+    try {
+        if (!isPost) {
+            // Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
+            // This is necessary since we don't have a separate entry point.
+            core.saveState("isPost", "true");
+            setup();
+            core.debug("Setup done");
+        }
+        else {
+            // Post
+            upload();
+        }
     }
-    else {
-        // Post
-        upload();
+    catch (error) {
+        core.setFailed(`Action failed with error: ${error}`);
     }
-}
-catch (error) {
-    core.setFailed(`Action failed with error: ${error}`);
 }
 
 
@@ -31313,12 +31315,19 @@ const checkStat = (stat, path, options) => stat.isFile() && checkPathExt(path, o
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(1730);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const main_1 = __nccwpck_require__(1730);
+(0, main_1.run)();
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
+//# sourceMappingURL=index.js.map

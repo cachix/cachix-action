@@ -25,14 +25,14 @@ in
   git-hooks.hooks = {
     prettier = {
       enable = true;
-      excludes = [ "dist" ];
+      files = "src/.*$";
     };
     nixfmt-rfc-style.enable = true;
     build-dist = {
       enable = true;
       files = "src/.*$";
       pass_filenames = false;
-      entry = "devenv shell yarn build";
+      entry = "devenv shell -- yarn build";
     };
   };
 }

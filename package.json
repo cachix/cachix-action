@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "description": "nix-build with the help of caching to Cachix",
-  "main": "dist/main/index.js",
+  "exports": {
+    ".": "dist/index.js"
+  },
   "scripts": {
-    "build": "tsc && ncc build -o dist/main src/main.ts"
+    "build": "ncc build -o dist src/index.ts --source-map"
   },
   "repository": {
     "type": "git",
@@ -31,7 +33,6 @@
     "@types/tail": "^2.2.1",
     "@types/which": "^3.0.0",
     "@vercel/ncc": "^0.38.3",
-    "ts-node": "^10.9.1",
     "typescript": "^5.7.2"
   }
 }
