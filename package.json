@@ -5,8 +5,7 @@
   "description": "nix-build with the help of caching to Cachix",
   "main": "dist/main/index.js",
   "scripts": {
-    "build": "tsc && ncc build -o dist/main src/main.ts",
-    "test": "echo NO TEST"
+    "build": "tsc && ncc build -o dist/main src/main.ts"
   },
   "repository": {
     "type": "git",
@@ -27,15 +26,11 @@
     "which": "^5.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.3",
     "@types/node": "^22.9.0",
     "@types/semver": "^7.5.4",
     "@types/tail": "^2.2.1",
     "@types/which": "^3.0.0",
     "@vercel/ncc": "^0.38.3",
-    "jest": "^29.6.2",
-    "jest-circus": "^29.6.2",
-    "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   }
