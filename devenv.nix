@@ -18,8 +18,8 @@ in
   languages.javascript = {
     enable = true;
     package = nodejs;
-    yarn.enable = true;
-    yarn.install.enable = true;
+    pnpm.enable = true;
+    pnpm.install.enable = true;
   };
 
   git-hooks.hooks = {
@@ -32,7 +32,7 @@ in
       enable = true;
       files = "src/.*$";
       pass_filenames = false;
-      entry = "devenv shell -- yarn build";
+      entry = "devenv shell -- pnpm build";
     };
   };
 }
