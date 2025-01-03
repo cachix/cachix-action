@@ -38,17 +38,11 @@ Note that malicious code submitted via forked pull request can, once merged into
 Install the dependencies
 
 ```bash
-$ yarn install
+$ pnpm install
 ```
 
 Build the typescript
 
 ```bash
-$ yarn build
-```
-
-Run the tests :heavy_check_mark:
-
-```bash
-$ yarn test
+$ pnpm build
 ```
