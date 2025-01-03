@@ -1,28 +1,12 @@
-name: "cachix-action test"
-on:
-  pull_request:
-  push:
-    branches:
-      - master
+name: "Test"
+
+on: workflow_call
 
 env:
   ACTIONS_STEP_DEBUG: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v30
-      - run: nix profile install nixpkgs#devenv
-      - name: Build
-        run: devenv shell -- pnpm build
-      # Check that build was committed
-      - name: Verify latest build
-        run: git diff --exit-code
-
   public-cache:
-    needs: [build]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -40,7 +24,6 @@ jobs:
       - run: nix-build test.nix
 
   public-cache-no-signing-key:
-    needs: [build]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -57,7 +40,6 @@ jobs:
       - run: nix-build test.nix
 
   private-cache:
-    needs: [build]
     if: ${{ github.ref == 'refs/heads/master' }}
     strategy:
       matrix:
@@ -77,7 +59,6 @@ jobs:
       - run: nix-build test.nix
 
   push-paths:
-    needs: [build]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -97,7 +78,6 @@ jobs:
           pathsToPush: "${{ steps.paths.outputs.OUT_PATHS }}"
 
   installCommand:
-    needs: [build]
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -114,7 +94,6 @@ jobs:
       - run: nix-build test.nix
 
   nix-master:
-    needs: [build]
     strategy:
       matrix:
         include:
