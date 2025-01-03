@@ -4,14 +4,10 @@ let
   nodejs = pkgs.nodejs_20;
 in
 {
-  packages =
-    let
-      nodePackages = config.languages.javascript.package.pkgs;
-    in
-    [
-      pkgs.act
-      nodePackages.typescript-language-server
-    ];
+  packages = [
+    pkgs.act
+    nodejs.pkgs.typescript-language-server
+  ];
 
   languages.typescript.enable = true;
 
