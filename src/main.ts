@@ -261,6 +261,9 @@ async function upload() {
       });
       daemonLog.on("line", (line) => core.info(line));
 
+      // Give the Nix daemon/socket some time to flush all the post-build hooks
+      await waitFor(500);
+
       try {
         core.debug("Waiting for Cachix daemon to exit...");
         await exec.exec(cachixBin, [
@@ -271,7 +274,7 @@ async function upload() {
         ]);
       } finally {
         // Wait a bit for the logs to flush through
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await waitFor(1000);
         daemonLog.unwatch();
       }
 
@@ -488,6 +491,10 @@ function partitionUsersAndGroups(mixedUsers: string[]): [string[], string[]] {
 
 function splitArgs(args: string): string[] {
   return args.split(" ").filter((arg) => arg !== "");
+}
+
+function waitFor(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 const isPost = !!core.getState("isPost");
