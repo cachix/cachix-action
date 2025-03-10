@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v30
+      - uses: cachix/install-nix-action@master
       - name: Test public cache
         uses: ./
         with:
@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v30
+      - uses: cachix/install-nix-action@master
       - name: Test public cache no signing key
         uses: ./
         with:
@@ -48,7 +48,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v30
+      - uses: cachix/install-nix-action@master
       - name: Test private cache
         uses: ./
         with:
@@ -65,7 +65,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v30
+      - uses: cachix/install-nix-action@master
       - id: paths
         run: |
           paths=$(nix-instantiate test.nix | tr '\n' ' ')
@@ -84,7 +84,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v30
+      - uses: cachix/install-nix-action@master
       - name: Test private cache
         uses: ./
         with:
@@ -113,7 +113,7 @@ jobs:
           chmod +x ./nar-toolbox-${{ matrix.system }}
           ./nar-toolbox-${{ matrix.system }} serve https://cache.nixos.org &
 
-      - uses: cachix/install-nix-action@v30
+      - uses: cachix/install-nix-action@master
         with:
           install_url: https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install
           install_options: "--tarball-url-prefix http://localhost:8080"
