@@ -40,7 +40,8 @@ jobs:
       - run: nix-build test.nix
 
   private-cache:
-    if: ${{ github.ref == 'refs/heads/master' }}
+    # Only run when secrets are available
+    if: ${{ github.secret_source == 'Actions' }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
