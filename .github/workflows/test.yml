@@ -1,6 +1,20 @@
 name: "Test"
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      install_nix_action_version:
+        description: "Version of install-nix-action to use"
+        required: false
+        default: "v31"
+        type: string
+  workflow_dispatch:
+    inputs:
+      install_nix_action_version:
+        description: "Version of install-nix-action to use"
+        required: false
+        default: "v31"
+        type: string
 
 env:
   ACTIONS_STEP_DEBUG: true
@@ -14,7 +28,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
       - name: Test public cache
         uses: ./
         with:
@@ -31,7 +45,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
       - name: Test public cache no signing key
         uses: ./
         with:
@@ -49,7 +63,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
       - name: Test private cache
         uses: ./
         with:
@@ -66,7 +80,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
       - id: paths
         run: |
           paths=$(nix-instantiate test.nix | tr '\n' ' ')
@@ -85,7 +99,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
       - name: Test private cache
         uses: ./
         with:
@@ -114,7 +128,7 @@ jobs:
           chmod +x ./nar-toolbox-${{ matrix.system }}
           ./nar-toolbox-${{ matrix.system }} serve https://cache.nixos.org &
 
-      - uses: cachix/install-nix-action@v31
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
         with:
           install_url: https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install
           install_options: "--tarball-url-prefix http://localhost:8080"
