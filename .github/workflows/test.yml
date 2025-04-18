@@ -13,18 +13,6 @@ on:
         required: false
         default: ""
         type: string
-  workflow_dispatch:
-    inputs:
-      install_nix_action_version:
-        description: "Version of install-nix-action to use"
-        required: false
-        default: "v31"
-        type: string
-      nix_install_url:
-        description: "URL for Nix installation script"
-        required: false
-        default: ""
-        type: string
 
 jobs:
   public-cache:
@@ -35,7 +23,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@${{ github.event.inputs.install_nix_action_version }}
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
         with:
           install_url: ${{ inputs.nix_install_url }}
       - name: Test public cache
@@ -54,7 +42,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@${{ github.event.inputs.install_nix_action_version }}
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
         with:
           install_url: ${{ inputs.nix_install_url }}
       - name: Test public cache no signing key
@@ -74,7 +62,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@${{ github.event.inputs.install_nix_action_version }}
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
         with:
           install_url: ${{ inputs.nix_install_url }}
       - name: Test private cache
@@ -93,7 +81,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@${{ github.event.inputs.install_nix_action_version }}
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
         with:
           install_url: ${{ inputs.nix_install_url }}
       - id: paths
@@ -114,7 +102,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@${{ github.event.inputs.install_nix_action_version }}
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
         with:
           install_url: ${{ inputs.nix_install_url }}
       - name: Test private cache
@@ -145,7 +133,7 @@ jobs:
           chmod +x ./nar-toolbox-${{ matrix.system }}
           ./nar-toolbox-${{ matrix.system }} serve https://cache.nixos.org &
 
-      - uses: cachix/install-nix-action@${{ github.event.inputs.install_nix_action_version }}
+      - uses: cachix/install-nix-action@${{ inputs.install_nix_action_version }}
         with:
           install_url: https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install
           install_options: "--tarball-url-prefix http://localhost:8080"
