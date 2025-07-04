@@ -21,7 +21,7 @@ in
   git-hooks.hooks = {
     prettier = {
       enable = true;
-      files = "(src/.*\.ts|.*\.md)$";
+      files = "(src/.*\.ts|.*\.md|.*\.yml)$";
     };
     nixfmt-rfc-style.enable = true;
     build-dist = {

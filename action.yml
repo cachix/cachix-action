@@ -2,30 +2,37 @@ name: "Cachix"
 description: "Build and cache Nix packages using Cachix binary caches to significantly reduce build times"
 author: "Domen Kožar"
 inputs:
+  # Cache Configuration
   name:
     description: "Name of a Cachix cache to push and pull/substitute"
     required: true
   extraPullNames:
     description: "Comma-separated list of names for extra Cachix caches to pull/substitute"
+
+  # Authentication
   authToken:
     description: "Authentication token for Cachix, needed for private cache access or to push using an auth token"
   signingKey:
     description: "Private key for self-signed caches"
+
+  # Push Configuration
   skipPush:
     description: "Set to true to disable pushing build results to the cache"
     default: "false"
+  useDaemon:
+    description: "Push store paths to the cache as they're built with the Cachix Daemon and post-build hooks"
+    default: "true"
   pathsToPush:
     description: "Whitespace-separated list of paths to push. Leave empty to push every build result"
   pushFilter:
     description: 'Ignored if pathsToPush is set. Regular expression to exclude derivations from the cache push, for example "(-source$|nixpkgs\.tar\.gz$)". Warning: this filter does not guarantee it will not get pushed if the path is part of the closure of something that will get pushed.'
+
+  # Advanced Options
+  skipAddingSubstituter:
+    description: "Set to true to skip adding name as a substituter"
+    default: "false"
   cachixArgs:
     description: "Extra command-line arguments to pass to Cachix. If empty, defaults to -j8"
-  skipAddingSubstituter:
-    description: "Set to true to skip adding Cachix cache as a substitute"
-    default: "false"
-  useDaemon:
-    description: "Push store paths to the cache as they're built with the Cachix Daemon"
-    default: "true"
   cachixBin:
     description: "Provide a custom path to the Cachix binary"
   installCommand:

@@ -43,20 +43,37 @@ Follow the long-form tutorial on [Continuous Integration with GitHub Actions](ht
 
 ## Options
 
-| Input                   | Description                                                                                                                                                                                                                                                                          | Required | Default |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------- |
-| `name`                  | Name of a Cachix cache to push and pull/substitute                                                                                                                                                                                                                                   | ✓        |         |
-| `extraPullNames`        | Comma-separated list of names for extra Cachix caches to pull/substitute                                                                                                                                                                                                             |          |         |
-| `authToken`             | Authentication token for Cachix, needed for private cache access or to push using an auth token                                                                                                                                                                                      |          |         |
-| `signingKey`            | Private key for self-signed caches                                                                                                                                                                                                                                                   |          |         |
-| `skipPush`              | Set to `true` to disable pushing build results to the cache                                                                                                                                                                                                                          |          | `false` |
-| `pathsToPush`           | Whitespace-separated list of paths to push. Leave empty to push every build result                                                                                                                                                                                                   |          |         |
-| `pushFilter`            | Ignored if `pathsToPush` is set. Regular expression to exclude derivations from the cache push, for example `"(-source$ \| nixpkgs\.tar\.gz$)"`. Warning: this filter does not guarantee it will not get pushed if the path is part of the closure of something that will get pushed |          |
-| `cachixArgs`            | Extra command-line arguments to pass to Cachix. If empty, defaults to `-j8`                                                                                                                                                                                                          |          |         |
-| `skipAddingSubstituter` | Set to `true` to skip adding Cachix cache as a substitute                                                                                                                                                                                                                            |          | `false` |
-| `useDaemon`             | Push store paths to the cache as they're built with the Cachix Daemon                                                                                                                                                                                                                |          | `true`  |
-| `cachixBin`             | Provide a custom path to the Cachix binary                                                                                                                                                                                                                                           |          |         |
-| `installCommand`        | Override the default Cachix installation method                                                                                                                                                                                                                                      |          |         |
+### Cache Configuration
+
+| Input            | Description                                                              | Required | Default |
+| ---------------- | ------------------------------------------------------------------------ | -------- | ------- |
+| `name`           | Name of a Cachix cache to push and pull/substitute                       | ✓        |         |
+| `extraPullNames` | Comma-separated list of names for extra Cachix caches to pull/substitute |          |         |
+
+### Authentication
+
+| Input        | Description                                                                                     | Required | Default |
+| ------------ | ----------------------------------------------------------------------------------------------- | -------- | ------- |
+| `authToken`  | Authentication token for Cachix, needed for private cache access or to push using an auth token |          |         |
+| `signingKey` | Private key for self-signed caches                                                              |          |         |
+
+### Push Configuration
+
+| Input         | Description                                                                                                                                                                                                                                                                          | Required | Default |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------- |
+| `skipPush`    | Set to `true` to disable pushing build results to the cache                                                                                                                                                                                                                          |          | `false` |
+| `useDaemon`   | Push store paths to the cache as they're built with the Cachix Daemon and post-build hooks                                                                                                                                                                                           |          | `true`  |
+| `pathsToPush` | Whitespace-separated list of paths to push. Leave empty to push every build result                                                                                                                                                                                                   |          |         |
+| `pushFilter`  | Ignored if `pathsToPush` is set. Regular expression to exclude derivations from the cache push, for example `"(-source$ \| nixpkgs\.tar\.gz$)"`. Warning: this filter does not guarantee it will not get pushed if the path is part of the closure of something that will get pushed |          |
+
+### Advanced Options
+
+| Input                   | Description                                                                 | Required | Default |
+| ----------------------- | --------------------------------------------------------------------------- | -------- | ------- |
+| `skipAddingSubstituter` | Set to `true` to skip adding `name` as a substituter                        |          | `false` |
+| `cachixArgs`            | Extra command-line arguments to pass to Cachix. If empty, defaults to `-j8` |          |         |
+| `cachixBin`             | Provide a custom path to the Cachix binary                                  |          |         |
+| `installCommand`        | Override the default Cachix installation method                             |          |         |
 
 ## Push modes
 
