@@ -8,15 +8,13 @@ filterPaths() {
   local paths=$2
 
   for path in $paths; do
-    echo $path | grep -vEe $regex
+    echo "$path" | grep -vEe "$regex"
   done | xargs
 }
 
 pathsToPush=""
-preBuildPaths=$(sort "$preBuildPathsFile")
-if [ $? -eq 0 ]; then
-  postBuildPaths=$("$(dirname "$0")"/list-nix-store.sh | sort)
-  if [ $? -eq 0 ]; then
+if preBuildPaths=$(sort "$preBuildPathsFile"); then
+  if postBuildPaths=$("$(dirname "$0")"/list-nix-store.sh | sort); then
     pathsToPush=$(comm -13 <(echo "$preBuildPaths") <(echo "$postBuildPaths"))
   else
     echo "::error::Failed to list post-build store paths."
@@ -26,7 +24,7 @@ else
 fi
 
 if [[ -n $pushFilter ]]; then
-  pathsToPush=$(filterPaths $pushFilter "$pathsToPush")
+  pathsToPush=$(filterPaths "$pushFilter" "$pathsToPush")
 fi
 
-echo "$pathsToPush" | "$cachix" push $cachixArgs "$cache"
+echo "$pathsToPush" | "$cachix" push "$cachixArgs" "$cache"

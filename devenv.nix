@@ -19,16 +19,20 @@ in
   };
 
   git-hooks.hooks = {
-    prettier = {
-      enable = true;
-      files = "(src/.*\.ts|.*\.md|.*\.yml)$";
-    };
-    nixfmt-rfc-style.enable = true;
     build-dist = {
       enable = true;
       files = "src/.*$";
       pass_filenames = false;
       entry = "devenv shell -- pnpm build";
+    };
+    nixfmt-rfc-style.enable = true;
+    prettier = {
+      enable = true;
+      files = "(src/.*\.ts|.*\.md|.*\.yml)$";
+    };
+    shellcheck = {
+      enable = true;
+      excludes = [ "\\.envrc" ];
     };
   };
 }
