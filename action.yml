@@ -4,39 +4,39 @@ author: "Domen Kožar"
 inputs:
   # Cache Configuration
   name:
-    description: "Name of a Cachix cache to push and pull/substitute"
+    description: "Name of the Cachix cache to pull (substitute) from and optionally push to"
     required: true
   extraPullNames:
-    description: "Comma-separated list of names for extra Cachix caches to pull/substitute"
+    description: "Comma-separated list of additional Cachix cache names to pull (substitute) from"
 
   # Authentication
   authToken:
-    description: "Authentication token for Cachix, needed for private cache access or to push using an auth token"
+    description: "Authentication token for Cachix, required for private cache access or to push to any cache"
   signingKey:
-    description: "Private key for self-signed caches"
+    description: "Private signing key for self-signed caches, used in addition to auth token to sign store paths"
 
   # Push Configuration
   skipPush:
-    description: "Set to true to disable pushing build results to the cache"
+    description: "Set to true to only pull from cache without pushing any build results"
     default: "false"
   useDaemon:
-    description: "Push store paths to the cache as they're built with the Cachix Daemon and post-build hooks"
+    description: "Use Cachix daemon mode to push store paths as they're built via post-build hooks. See Push modes in README for more information"
     default: "true"
   pathsToPush:
-    description: "Whitespace-separated list of paths to push. Leave empty to push every build result"
+    description: "Whitespace-separated list of specific store paths to push. Leave empty to push all build results"
   pushFilter:
-    description: 'Ignored if pathsToPush is set. Regular expression to exclude derivations from the cache push, for example "(-source$|nixpkgs\.tar\.gz$)". Warning: this filter does not guarantee it will not get pushed if the path is part of the closure of something that will get pushed.'
+    description: "Regular expression to exclude derivations from pushing, for example \"(-source$|nixpkgs\\.tar\\.gz$)\". Ignored if pathsToPush is set. Warning: paths may still be pushed if they are part of another path's closure."
 
   # Advanced Options
   skipAddingSubstituter:
-    description: "Set to true to skip adding name as a substituter"
+    description: "Set to true to skip adding the cache as a Nix substituter"
     default: "false"
   cachixArgs:
-    description: "Extra command-line arguments to pass to Cachix. If empty, defaults to -j8"
+    description: "Additional command-line arguments to pass to Cachix commands. Defaults to -j8 for parallel processing"
   cachixBin:
-    description: "Provide a custom path to the Cachix binary"
+    description: "Custom path to the Cachix binary if not using the default installation"
   installCommand:
-    description: "Override the default Cachix installation method"
+    description: "Custom command to install Cachix instead of the default installation method"
 branding:
   color: "blue"
   icon: "database"
