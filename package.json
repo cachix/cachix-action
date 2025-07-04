@@ -28,7 +28,7 @@
     "which": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.10",
+    "@types/node": "^20",
     "@types/semver": "^7.7.0",
     "@types/tail": "^2.2.3",
     "@types/which": "^3.0.4",
