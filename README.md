@@ -117,14 +117,22 @@ Malicious code merged from forks can reveal your tokens.
 
 ## Development
 
-Install the dependencies
+Enter the development shell with [devenv](https://devenv.sh).
 
-```bash
-$ pnpm install
+```console
+devenv shell
 ```
 
-Build action
+Install the dependencies.
 
-```bash
-$ pnpm build
+```console
+pnpm install
 ```
+
+Build the action.
+
+```console
+pnpm build
+```
+
+The devenv shell will install git-hooks that must be run before each commit.
