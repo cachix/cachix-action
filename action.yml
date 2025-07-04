@@ -13,11 +13,11 @@ inputs:
   authToken:
     description: "Authentication token for Cachix, required for private cache access or to push to any cache"
   signingKey:
-    description: "Private signing key for self-signed caches, used in addition to auth token to sign store paths"
+    description: "Private signing key for self-signed caches, used in addition to the auth token to sign store paths"
 
   # Push Configuration
   skipPush:
-    description: "Set to true to only pull from cache without pushing any build results"
+    description: "Set to true to only pull from the cache without pushing any build results"
     default: "false"
   useDaemon:
     description: "Use Cachix daemon mode to push store paths as they're built via post-build hooks. See Push modes in README for more information"
@@ -25,7 +25,7 @@ inputs:
   pathsToPush:
     description: "Whitespace-separated list of specific store paths to push. Leave empty to push all build results"
   pushFilter:
-    description: "Regular expression to exclude derivations from pushing, for example \"(-source$|nixpkgs\\.tar\\.gz$)\". Ignored if pathsToPush is set. Warning: paths may still be pushed if they are part of another path's closure."
+    description: "Regular expression to exclude derivations from being pushed, for example \"(-source$|nixpkgs\\.tar\\.gz$)\". Ignored if pathsToPush is set. Warning: paths may still be pushed if they are part of another path's closure."
 
   # Advanced Options
   skipAddingSubstituter:

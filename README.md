@@ -52,19 +52,19 @@ Follow the long-form tutorial on [Continuous Integration with GitHub Actions](ht
 
 ### Authentication
 
-| Input        | Description                                                                                    | Required | Default |
-| ------------ | ---------------------------------------------------------------------------------------------- | -------- | ------- |
-| `authToken`  | Authentication token for Cachix, required for private cache access or to push to any cache     |          |         |
-| `signingKey` | Private signing key for self-signed caches, used in addition to auth token to sign store paths |          |         |
+| Input        | Description                                                                                        | Required | Default |
+| ------------ | -------------------------------------------------------------------------------------------------- | -------- | ------- |
+| `authToken`  | Authentication token for Cachix, required for private cache access or to push to any cache         |          |         |
+| `signingKey` | Private signing key for self-signed caches, used in addition to the auth token to sign store paths |          |         |
 
 ### Push Configuration
 
-| Input         | Description                                                                                                                                                                                                             | Required | Default |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
-| `skipPush`    | Set to `true` to only pull from cache without pushing any build results                                                                                                                                                 |          | `false` |
-| `useDaemon`   | Use Cachix daemon mode to push store paths as they're built via post-build hooks. See [Push modes](#push-modes) for more information                                                                                    |          | `true`  |
-| `pathsToPush` | Whitespace-separated list of specific store paths to push. Leave empty to push all build results                                                                                                                        |          |         |
-| `pushFilter`  | Regular expression to exclude derivations from pushing, for example `"(-source$ \| nixpkgs\.tar\.gz$)"`. Ignored if `pathsToPush` is set. Warning: paths may still be pushed if they are part of another path's closure |          |
+| Input         | Description                                                                                                                                                                                                                  | Required | Default |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------- |
+| `skipPush`    | Set to `true` to only pull from the cache without pushing any build results                                                                                                                                                  |          | `false` |
+| `useDaemon`   | Use Cachix daemon mode to push store paths as they're built via post-build hooks. See [Push modes](#push-modes) for more information                                                                                         |          | `true`  |
+| `pathsToPush` | Whitespace-separated list of specific store paths to push. Leave empty to push all build results                                                                                                                             |          |         |
+| `pushFilter`  | Regular expression to exclude derivations from being pushed, for example `"(-source$ \| nixpkgs\.tar\.gz$)"`. Ignored if `pathsToPush` is set. Warning: paths may still be pushed if they are part of another path's closure |          |
 
 ### Advanced Options
 
