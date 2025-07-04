@@ -1,6 +1,6 @@
 # cachix-action
 
-![github actions badge](https://github.com/cachix/cachix-action/workflows/cachix-action%20test/badge.svg)
+[![CI](https://github.com/cachix/cachix-action/workflows/cachix-action%20test/badge.svg)](https://github.com/cachix/cachix-action/actions)
 
 Nix enables Continuous Integration (CI) to build and cache developer environments for every project and branch using binary caches.
 With [Cachix](https://cachix.org), you can significantly reduce build times by ensuring packages are built only once and shared across all developers and CI runs.
