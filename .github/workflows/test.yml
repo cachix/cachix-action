@@ -13,7 +13,7 @@ jobs:
         useDaemon: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
       - name: Test public cache
         uses: ./
@@ -30,7 +30,7 @@ jobs:
         useDaemon: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
       - name: Test public cache no signing key
         uses: ./
@@ -48,7 +48,7 @@ jobs:
         useDaemon: [true, false]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
       - name: Test private cache
         uses: ./
@@ -65,7 +65,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
       - id: paths
         run: |
@@ -84,7 +84,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
       - name: Test private cache
         uses: ./
@@ -106,7 +106,7 @@ jobs:
             system: aarch64-darwin
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Run NAR server
         run: |
