@@ -25,7 +25,7 @@ in
       pass_filenames = false;
       entry = "devenv shell -- pnpm build";
     };
-    nixfmt-rfc-style.enable = true;
+    nixfmt.enable = true;
     prettier = {
       enable = true;
       files = "(src/.*\.ts|.*\.md|.*\.yml)$";
