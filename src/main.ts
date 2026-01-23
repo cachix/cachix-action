@@ -145,7 +145,26 @@ async function setup() {
 
   switch (pushMode) {
     case PushMode.Daemon: {
-      const daemonDir = await fs.mkdtemp(path.join(tmpdir, "cachix-daemon-"));
+      const daemonDirPrefix = "cachix";
+      const socketName = "daemon.sock";
+      let daemonDir = await fs.mkdtemp(path.join(tmpdir, daemonDirPrefix));
+      let socketPath = path.join(daemonDir, socketName);
+
+      // Unix socket paths are limited to:
+      //   108 characters on Linux
+      //   104 characters on BSD/macOS
+      // If the path is too long, recreate in os.tmpdir() instead.
+      const maxSocketPathLen = os.platform() === "linux" ? 108 : 104;
+      if (socketPath.length > maxSocketPathLen) {
+        const oldSocketPath = socketPath;
+        await fs.rm(daemonDir, { recursive: true });
+        daemonDir = await fs.mkdtemp(path.join(os.tmpdir(), daemonDirPrefix));
+        socketPath = path.join(daemonDir, socketName);
+        core.warning(
+          `Socket path too long (${oldSocketPath.length} > ${maxSocketPathLen} chars), using shorter path: ${oldSocketPath} -> ${socketPath}`,
+        );
+      }
+
       const daemonLog = openSync(`${daemonDir}/daemon.log`, "a");
 
       const daemon = spawn(
@@ -154,7 +173,7 @@ async function setup() {
           "daemon",
           "run",
           "--socket",
-          `${daemonDir}/daemon.sock`,
+          socketPath,
           name,
           ...splitArgs(cachixArgs),
         ],
@@ -276,6 +295,7 @@ async function upload() {
         // Wait a bit for the logs to flush through
         await waitFor(1000);
         daemonLog.unwatch();
+        await fs.rm(daemonDir, { recursive: true });
       }
 
       break;
