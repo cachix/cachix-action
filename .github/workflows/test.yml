@@ -1,6 +1,18 @@
 name: "Test"
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      install_url:
+        description: "Nix installation URL, e.g. https://releases.nixos.org/nix/nix-2.33.3/install"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      install_url:
+        description: "Nix installation URL, e.g. https://releases.nixos.org/nix/nix-2.33.3/install"
+        required: false
+        type: string
 
 env:
   ACTIONS_STEP_DEBUG: true
@@ -15,6 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
+        with:
+          install_url: ${{ inputs.install_url }}
       - name: Test public cache
         uses: ./
         with:
@@ -32,6 +46,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
+        with:
+          install_url: ${{ inputs.install_url }}
       - name: Test public cache no signing key
         uses: ./
         with:
@@ -50,6 +66,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
+        with:
+          install_url: ${{ inputs.install_url }}
       - name: Test private cache
         uses: ./
         with:
@@ -67,6 +85,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
+        with:
+          install_url: ${{ inputs.install_url }}
       - id: paths
         run: |
           paths=$(nix-instantiate test.nix | tr '\n' ' ')
@@ -86,6 +106,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v31
+        with:
+          install_url: ${{ inputs.install_url }}
       - name: Test private cache
         uses: ./
         with:
@@ -116,7 +138,7 @@ jobs:
 
       - uses: cachix/install-nix-action@v31
         with:
-          install_url: https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install
+          install_url: ${{ inputs.install_url || 'https://hydra.nixos.org/job/nix/master/installerScript/latest-finished/download/1/install' }}
           install_options: "--tarball-url-prefix http://localhost:8080"
 
       - name: Test public cache
