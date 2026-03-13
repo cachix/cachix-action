@@ -4,10 +4,10 @@
   "private": true,
   "description": "nix-build with the help of caching to Cachix",
   "exports": {
-    ".": "dist/index.js"
+    ".": "./dist/index.js"
   },
   "scripts": {
-    "build": "ncc build -o dist src/index.ts --source-map"
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=cjs --outfile=dist/index.js --sourcemap"
   },
   "repository": {
     "type": "git",
@@ -21,18 +21,23 @@
   "author": "Domen Kožar",
   "license": "ASL2",
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@actions/exec": "^1.1.1",
-    "semver": "^7.7.2",
+    "@actions/core": "^3.0.0",
+    "@actions/exec": "^3.0.0",
+    "semver": "^7.7.4",
     "tail": "^2.2.6",
-    "which": "^5.0.0"
+    "which": "^6.0.1"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/semver": "^7.7.0",
+    "@types/node": "^25.5.0",
+    "@types/semver": "^7.7.1",
     "@types/tail": "^2.2.3",
     "@types/which": "^3.0.4",
-    "@vercel/ncc": "^0.38.3",
-    "typescript": "^5.8.3"
+    "esbuild": "^0.27.4",
+    "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }
