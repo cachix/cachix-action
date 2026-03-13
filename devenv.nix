@@ -1,7 +1,7 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 let
-  nodejs = pkgs.nodejs_20;
+  nodejs = pkgs.nodejs_24;
 in
 {
   packages = [
