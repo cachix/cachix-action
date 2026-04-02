@@ -17,7 +17,7 @@ Follow the long-form tutorial on [Continuous Integration with GitHub Actions](ht
 ### Read-only cache
 
 ```yaml
-- uses: cachix/cachix-action@1eb2ef646ac0255473d23a5907ad7b04ce94065c # v17
+- uses: cachix/cachix-action@v17
   with:
     name: mycache
 ```
@@ -25,7 +25,7 @@ Follow the long-form tutorial on [Continuous Integration with GitHub Actions](ht
 ### Write cache with auth token
 
 ```yaml
-- uses: cachix/cachix-action@1eb2ef646ac0255473d23a5907ad7b04ce94065c # v17
+- uses: cachix/cachix-action@v17
   with:
     name: mycache
     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
@@ -34,7 +34,7 @@ Follow the long-form tutorial on [Continuous Integration with GitHub Actions](ht
 ### Write cache with signing key
 
 ```yaml
-- uses: cachix/cachix-action@1eb2ef646ac0255473d23a5907ad7b04ce94065c # v17
+- uses: cachix/cachix-action@v17
   with:
     name: mycache
     authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
