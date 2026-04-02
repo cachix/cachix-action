@@ -1,0 +1,24 @@
+name: Update version references
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  update-references:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: master
+
+      - name: Update version references
+        run: sed -i "s|cachix-action@v[0-9]\+|cachix-action@${{ github.ref_name }}|g" README.md
+
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "Update references to ${{ github.ref_name }}"
