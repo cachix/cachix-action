@@ -115,24 +115,6 @@ Forked pull requests cannot access secrets, so they can only read from public ca
 
 Malicious code merged from forks can reveal your tokens.
 
-## Development
+## Contributing
 
-Enter the development shell with [devenv](https://devenv.sh).
-
-```console
-devenv shell
-```
-
-Install the dependencies.
-
-```console
-pnpm install
-```
-
-Build the action.
-
-```console
-pnpm build
-```
-
-The devenv shell will install git-hooks that must be run before each commit.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
