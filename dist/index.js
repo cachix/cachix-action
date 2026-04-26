@@ -22532,7 +22532,8 @@ async function registerPostBuildHook(cachixBin, daemonDir) {
       OUT_PATHS=$(filterPaths $PUSH_FILTER "$OUT_PATHS")
     fi
 
-    exec ${cachixBin} daemon push       --socket ${daemonDir}/daemon.sock       $OUT_PATHS
+    ${cachixBin} daemon push       --socket ${daemonDir}/daemon.sock       $OUT_PATHS || echo "cachix: daemon push failed with exit $?; continuing." >&2
+    exit 0
     `,
     // Make the post-build-hook executable
     { mode: 493 }
