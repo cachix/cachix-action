@@ -22646,10 +22646,10 @@ async function run() {
   try {
     if (!isPost) {
       saveState("isPost", "true");
-      setup();
+      await setup();
       debug("Setup done");
     } else {
-      upload();
+      await upload();
     }
   } catch (error2) {
     setFailed(`Action failed with error: ${error2}`);

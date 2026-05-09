@@ -526,11 +526,11 @@ export async function run(): Promise<void> {
       // Publish a variable so that when the POST action runs, it can determine it should run the cleanup logic.
       // This is necessary since we don't have a separate entry point.
       core.saveState("isPost", "true");
-      setup();
+      await setup();
       core.debug("Setup done");
     } else {
       // Post
-      upload();
+      await upload();
     }
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
