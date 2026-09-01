@@ -6,10 +6,12 @@ in
 {
   packages = [
     pkgs.act
-    nodejs.pkgs.typescript-language-server
   ];
 
-  languages.typescript.enable = true;
+  languages.typescript = {
+    enable = true;
+    lsp.enable = true;
+  };
 
   languages.javascript = {
     enable = true;
@@ -23,7 +25,7 @@ in
       enable = true;
       files = "src/.*$";
       pass_filenames = false;
-      entry = "devenv shell -- pnpm build";
+      entry = "pnpm build";
     };
     nixfmt.enable = true;
     prettier = {
