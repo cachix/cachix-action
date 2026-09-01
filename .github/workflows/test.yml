@@ -32,7 +32,7 @@ jobs:
           name: cachix-action
           signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
           useDaemon: ${{ matrix.useDaemon }}
-      - run: nix-build test.nix
+      - run: nix-build tests
 
   public-cache-no-signing-key:
     strategy:
@@ -48,7 +48,7 @@ jobs:
         uses: ./
         with:
           name: cachix-action
-      - run: nix-build test.nix
+      - run: nix-build tests
 
   private-cache:
     # Only run when secrets are available
@@ -70,7 +70,7 @@ jobs:
           signingKey: "${{ secrets.CACHIX_SIGNING_KEY_PRIVATE }}"
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           useDaemon: ${{ matrix.useDaemon }}
-      - run: nix-build test.nix
+      - run: nix-build tests
 
   push-paths:
     strategy:
@@ -84,7 +84,7 @@ jobs:
           install_url: ${{ inputs.install_url }}
       - id: paths
         run: |
-          paths=$(nix-instantiate test.nix | tr '\n' ' ')
+          paths=$(nix-instantiate tests | tr '\n' ' ')
           echo "OUT_PATHS=$paths" >> "$GITHUB_OUTPUT"
       - name: Test pushPaths
         uses: ./
@@ -109,7 +109,7 @@ jobs:
           name: cachix-action
           signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
           installCommand: "nix-env -j8 -f https://cachix.org/api/v1/install -iA cachix"
-      - run: nix-build test.nix
+      - run: nix-build tests
 
   nix-master:
     strategy:
@@ -139,7 +139,7 @@ jobs:
         with:
           name: cachix-action
           signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
-      - run: nix-build test.nix
+      - run: nix-build tests
 
   determinate-nix-pull:
     strategy:
@@ -154,7 +154,7 @@ jobs:
         with:
           name: cachix-action
           skipPush: true
-      - run: nix-build test.nix
+      - run: nix-build tests
 
   determinate-nix-push:
     if: ${{ github.secret_source == 'Actions' }}
@@ -173,7 +173,7 @@ jobs:
           authToken: ${{ matrix.auth == 'auth-token-and-signing-key' && secrets.CACHIX_AUTH_TOKEN || '' }}
           signingKey: ${{ matrix.auth == 'signing-key' && secrets.CACHIX_SIGNING_KEY || secrets.CACHIX_SIGNING_KEY_PRIVATE }}
           useDaemon: ${{ matrix.auth == 'signing-key' }}
-      - run: nix-build test.nix
+      - run: nix-build tests
 
   lix-pull:
     strategy:
@@ -188,7 +188,7 @@ jobs:
         with:
           name: cachix-action
           skipPush: true
-      - run: nix-build test.nix
+      - run: nix-build tests
 
   lix-push:
     if: ${{ github.secret_source == 'Actions' }}
@@ -207,4 +207,4 @@ jobs:
           authToken: ${{ matrix.auth == 'auth-token-and-signing-key' && secrets.CACHIX_AUTH_TOKEN || '' }}
           signingKey: ${{ matrix.auth == 'signing-key' && secrets.CACHIX_SIGNING_KEY || secrets.CACHIX_SIGNING_KEY_PRIVATE }}
           useDaemon: ${{ matrix.auth == 'signing-key' }}
-      - run: nix-build test.nix
+      - run: nix-build tests

@@ -20,4 +20,10 @@ Build the action.
 pnpm build
 ```
 
+Run the Nix integration fixture.
+
+```console
+nix-build tests
+```
+
 The devenv shell will install git-hooks that must be run before each commit.
