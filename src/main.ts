@@ -198,6 +198,9 @@ async function setup() {
 
       await registerPostBuildHook(cachixBin, daemonDir);
 
+      // Record the store listing the post step diffs against.
+      await recordPreBuildPaths(tmpdir);
+
       // Expose the daemon directory for the post action hook
       core.exportVariable(ENV_CACHIX_DAEMON_DIR, daemonDir);
 
@@ -208,13 +211,7 @@ async function setup() {
     }
 
     case PushMode.StoreScan: {
-      // Remember existing store paths
-      const preBuildPathsFile = `${tmpdir}/store-path-pre-build`;
-      core.saveState("preBuildPathsFile", preBuildPathsFile);
-      await exec.exec("sh", [
-        "-c",
-        `${__dirname}/list-nix-store.sh > ${preBuildPathsFile}`,
-      ]);
+      await recordPreBuildPaths(tmpdir);
       break;
     }
 
@@ -257,64 +254,93 @@ async function upload() {
     }
 
     case PushMode.Daemon: {
-      const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
+      await stopDaemon(cachixBin);
 
-      if (!daemonDir) {
-        core.error("Cachix Daemon not started. Skipping push");
-        break;
-      }
-
-      const daemonPid = parseInt(
-        await fs.readFile(pidFilePath(daemonDir), { encoding: "utf8" }),
-      );
-
-      if (!daemonPid) {
-        core.error("Failed to find PID of Cachix Daemon. Skipping push.");
-        break;
-      }
-
-      core.debug(`Found Cachix daemon with pid ${daemonPid}`);
-
-      let daemonLog = new Tail(`${daemonDir}/daemon.log`, {
-        fromBeginning: true,
-      });
-      daemonLog.on("line", (line) => core.info(line));
-
-      // Give the Nix daemon/socket some time to flush all the post-build hooks
-      await waitFor(500);
-
-      try {
-        core.debug("Waiting for Cachix daemon to exit...");
-        await exec.exec(cachixBin, [
-          "daemon",
-          "stop",
-          "--socket",
-          `${daemonDir}/daemon.sock`,
-        ]);
-      } finally {
-        // Wait a bit for the logs to flush through
-        await waitFor(1000);
-        daemonLog.unwatch();
-        await fs.rm(daemonDir, { recursive: true });
-      }
+      // `cachix daemon stop` returns before the upload queue drains, so a path
+      // the daemon reported as pushed can still be missing from the cache.
+      // Sweep the store once the daemon is gone: `cachix push` skips the paths
+      // that are already there and uploads the rest.
+      await pushNewPaths(cachixBin);
 
       break;
     }
 
     case PushMode.StoreScan: {
-      const preBuildPathsFile = core.getState("preBuildPathsFile");
-      await exec.exec(`${__dirname}/push-paths.sh`, [
-        cachixBin,
-        cachixArgs,
-        name,
-        preBuildPathsFile,
-        pushFilter,
-      ]);
+      await pushNewPaths(cachixBin);
       break;
     }
   }
 
   core.endGroup();
+}
+
+async function stopDaemon(cachixBin: string) {
+  const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
+
+  if (!daemonDir) {
+    core.error("Cachix Daemon not started. Skipping push");
+    return;
+  }
+
+  const daemonPid = parseInt(
+    await fs.readFile(pidFilePath(daemonDir), { encoding: "utf8" }),
+  );
+
+  if (!daemonPid) {
+    core.error("Failed to find PID of Cachix Daemon. Skipping push.");
+    return;
+  }
+
+  core.debug(`Found Cachix daemon with pid ${daemonPid}`);
+
+  const daemonLog = new Tail(`${daemonDir}/daemon.log`, {
+    fromBeginning: true,
+  });
+  daemonLog.on("line", (line) => core.info(line));
+
+  // Give the Nix daemon/socket some time to flush all the post-build hooks
+  await waitFor(500);
+
+  try {
+    core.debug("Waiting for Cachix daemon to exit...");
+    await exec.exec(cachixBin, [
+      "daemon",
+      "stop",
+      "--socket",
+      `${daemonDir}/daemon.sock`,
+    ]);
+  } finally {
+    // Wait a bit for the logs to flush through
+    await waitFor(1000);
+    daemonLog.unwatch();
+    await fs.rm(daemonDir, { recursive: true });
+  }
+}
+
+async function recordPreBuildPaths(tmpdir: string) {
+  const preBuildPathsFile = `${tmpdir}/store-path-pre-build`;
+  core.saveState("preBuildPathsFile", preBuildPathsFile);
+  await exec.exec("sh", [
+    "-c",
+    `${__dirname}/list-nix-store.sh > ${preBuildPathsFile}`,
+  ]);
+}
+
+async function pushNewPaths(cachixBin: string) {
+  const preBuildPathsFile = core.getState("preBuildPathsFile");
+
+  if (!preBuildPathsFile) {
+    core.warning("No pre-build store listing found. Skipping the push.");
+    return;
+  }
+
+  await exec.exec(`${__dirname}/push-paths.sh`, [
+    cachixBin,
+    cachixArgs,
+    name,
+    preBuildPathsFile,
+    pushFilter,
+  ]);
 }
 
 function pidFilePath(daemonDir: string): string {
