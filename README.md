@@ -85,6 +85,7 @@ This can be controlled with the `useDaemon` option.
 The daemon registers a [post-build hook](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-post-build-hook) with Nix.
 Newly built store paths are pushed to the cache as they're built.
 The limitation is that Nix does not trigger the hook for substituted paths.
+Once the daemon is stopped, the store is swept once for anything it did not upload, so a path the daemon reported as pushed is never silently dropped.
 
 > [!NOTE]
 > Post-build hooks may be run as root if the nix-daemon is root.

@@ -22685,17 +22685,13 @@ async function setup() {
         return;
       }
       await registerPostBuildHook(cachixBin, daemonDir);
+      await recordPreBuildPaths(tmpdir2);
       exportVariable(ENV_CACHIX_DAEMON_DIR, daemonDir);
       daemon.unref();
       break;
     }
     case "StoreScan" /* StoreScan */: {
-      const preBuildPathsFile = `${tmpdir2}/store-path-pre-build`;
-      saveState("preBuildPathsFile", preBuildPathsFile);
-      await exec("sh", [
-        "-c",
-        `${__dirname}/list-nix-store.sh > ${preBuildPathsFile}`
-      ]);
+      await recordPreBuildPaths(tmpdir2);
       break;
     }
     default:
@@ -22729,52 +22725,71 @@ async function upload() {
       break;
     }
     case "Daemon" /* Daemon */: {
-      const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
-      if (!daemonDir) {
-        error("Cachix Daemon not started. Skipping push");
-        break;
-      }
-      const daemonPid = parseInt(
-        await fs3.readFile(pidFilePath(daemonDir), { encoding: "utf8" })
-      );
-      if (!daemonPid) {
-        error("Failed to find PID of Cachix Daemon. Skipping push.");
-        break;
-      }
-      debug(`Found Cachix daemon with pid ${daemonPid}`);
-      let daemonLog = new import_tail.Tail(`${daemonDir}/daemon.log`, {
-        fromBeginning: true
-      });
-      daemonLog.on("line", (line) => info(line));
-      await waitFor(500);
-      try {
-        debug("Waiting for Cachix daemon to exit...");
-        await exec(cachixBin, [
-          "daemon",
-          "stop",
-          "--socket",
-          `${daemonDir}/daemon.sock`
-        ]);
-      } finally {
-        await waitFor(1e3);
-        daemonLog.unwatch();
-        await fs3.rm(daemonDir, { recursive: true });
-      }
+      await stopDaemon(cachixBin);
+      await pushNewPaths(cachixBin);
       break;
     }
     case "StoreScan" /* StoreScan */: {
-      const preBuildPathsFile = getState("preBuildPathsFile");
-      await exec(`${__dirname}/push-paths.sh`, [
-        cachixBin,
-        cachixArgs,
-        name,
-        preBuildPathsFile,
-        pushFilter
-      ]);
+      await pushNewPaths(cachixBin);
       break;
     }
   }
   endGroup();
+}
+async function stopDaemon(cachixBin) {
+  const daemonDir = process.env[ENV_CACHIX_DAEMON_DIR];
+  if (!daemonDir) {
+    error("Cachix Daemon not started. Skipping push");
+    return;
+  }
+  const daemonPid = parseInt(
+    await fs3.readFile(pidFilePath(daemonDir), { encoding: "utf8" })
+  );
+  if (!daemonPid) {
+    error("Failed to find PID of Cachix Daemon. Skipping push.");
+    return;
+  }
+  debug(`Found Cachix daemon with pid ${daemonPid}`);
+  const daemonLog = new import_tail.Tail(`${daemonDir}/daemon.log`, {
+    fromBeginning: true
+  });
+  daemonLog.on("line", (line) => info(line));
+  await waitFor(500);
+  try {
+    debug("Waiting for Cachix daemon to exit...");
+    await exec(cachixBin, [
+      "daemon",
+      "stop",
+      "--socket",
+      `${daemonDir}/daemon.sock`
+    ]);
+  } finally {
+    await waitFor(1e3);
+    daemonLog.unwatch();
+    await fs3.rm(daemonDir, { recursive: true });
+  }
+}
+async function recordPreBuildPaths(tmpdir2) {
+  const preBuildPathsFile = `${tmpdir2}/store-path-pre-build`;
+  saveState("preBuildPathsFile", preBuildPathsFile);
+  await exec("sh", [
+    "-c",
+    `${__dirname}/list-nix-store.sh > ${preBuildPathsFile}`
+  ]);
+}
+async function pushNewPaths(cachixBin) {
+  const preBuildPathsFile = getState("preBuildPathsFile");
+  if (!preBuildPathsFile) {
+    warning("No pre-build store listing found. Skipping the push.");
+    return;
+  }
+  await exec(`${__dirname}/push-paths.sh`, [
+    cachixBin,
+    cachixArgs,
+    name,
+    preBuildPathsFile,
+    pushFilter
+  ]);
 }
 function pidFilePath(daemonDir) {
   return path4.join(daemonDir, "daemon.pid");
