@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: cachix/install-nix-action@v31
+      - uses: cachix/install-nix-action@v32
       - run: nix profile install nixpkgs#devenv
       - name: Build
         run: devenv shell -- pnpm build
