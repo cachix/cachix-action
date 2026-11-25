@@ -22882,7 +22882,8 @@ var cachixArgs = getInput("cachixArgs");
 var skipAddingSubstituter = getBooleanInput("skipAddingSubstituter");
 var useDaemon = getBooleanInput("useDaemon");
 var cachixBinInput = getInput("cachixBin");
-var installCommand = getInput("installCommand") || "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
+var defaultCachixVersion = process.platform === "darwin" && process.arch === "x64" ? "1.11.1" : "1.15.0";
+var installCommand = getInput("installCommand") || `nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install/${defaultCachixVersion}`;
 var ENV_CACHIX_DAEMON_DIR = "CACHIX_DAEMON_DIR";
 async function setup() {
   let cachixBin = cachixBinInput;
