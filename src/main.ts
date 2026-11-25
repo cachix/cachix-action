@@ -21,9 +21,12 @@ const cachixArgs = core.getInput("cachixArgs");
 const skipAddingSubstituter = core.getBooleanInput("skipAddingSubstituter");
 const useDaemon = core.getBooleanInput("useDaemon");
 const cachixBinInput = core.getInput("cachixBin");
+// Cachix 1.11.1 is the last release with a prebuilt Intel macOS binary.
+const defaultCachixVersion =
+  process.platform === "darwin" && process.arch === "x64" ? "1.11.1" : "1.15.0";
 const installCommand =
   core.getInput("installCommand") ||
-  "nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install";
+  `nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install/${defaultCachixVersion}`;
 
 const ENV_CACHIX_DAEMON_DIR = "CACHIX_DAEMON_DIR";
 

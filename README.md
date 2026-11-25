@@ -75,11 +75,13 @@ Follow the long-form tutorial on [Continuous Integration with GitHub Actions](ht
 | `cachixBin`             | Custom path to the Cachix binary if not using the default installation                                  |          |         |
 | `installCommand`        | Custom command to install Cachix instead of the default installation method                             |          |         |
 
-### Pin the Cachix CLI version
+### Cachix CLI version
 
-The default installer fetches the current Cachix CLI, even when you pin the action to a tag or commit.
-Use `installCommand` with a versioned installer URL to pin the CLI as well.
-This example pins Cachix 1.11.1, the last release with a prebuilt Intel macOS (`x86_64-darwin`) binary.
+The action installs Cachix 1.15.0 by default. On Intel macOS (`x86_64-darwin`), it installs Cachix 1.11.1, the last release with a prebuilt binary for that platform.
+
+The action installs Cachix only when `cachixBin` is unset and it cannot find `cachix` on `PATH`.
+To select a binary you already installed, set `cachixBin` to its path.
+To install a different version, use `installCommand` with a versioned installer URL.
 
 ```yaml
 - uses: cachix/cachix-action@v17
@@ -87,9 +89,6 @@ This example pins Cachix 1.11.1, the last release with a prebuilt Intel macOS (`
     name: mycache
     installCommand: nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install/1.11.1
 ```
-
-The action runs `installCommand` only when `cachixBin` is unset and it cannot find `cachix` on `PATH`.
-To select a specific binary you already installed, set `cachixBin` to its path.
 
 ## Push modes
 
