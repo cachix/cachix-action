@@ -72,23 +72,29 @@ Follow the long-form tutorial on [Continuous Integration with GitHub Actions](ht
 | ----------------------- | ------------------------------------------------------------------------------------------------------- | -------- | ------- |
 | `skipAddingSubstituter` | Set to `true` to skip adding the cache as a Nix substituter                                             |          | `false` |
 | `cachixArgs`            | Additional command-line arguments to pass to Cachix commands. Defaults to `-j8` for parallel processing |          |         |
+| `cachixVersion`         | Version of the Cachix CLI to install. Defaults to 1.15.0, or 1.11.1 on Intel macOS                      |          |         |
 | `cachixBin`             | Custom path to the Cachix binary if not using the default installation                                  |          |         |
 | `installCommand`        | Custom command to install Cachix instead of the default installation method                             |          |         |
 
 ### Cachix CLI version
 
-The action installs Cachix 1.15.0 by default. On Intel macOS (`x86_64-darwin`), it installs Cachix 1.11.1, the last release with a prebuilt binary for that platform.
+By default, the action installs the latest Cachix version as of the action's release.
+If `cachix` is already on `PATH`, the action skips the installation.
 
-The action installs Cachix only when `cachixBin` is unset and it cannot find `cachix` on `PATH`.
-To select a binary you already installed, set `cachixBin` to its path.
-To install a different version, use `installCommand` with a versioned installer URL.
+To install a different version, set `cachixVersion`.
+To use a Cachix binary that you already installed, set `cachixBin` to its path.
+To install Cachix in a different way, set `installCommand`.
 
 ```yaml
 - uses: cachix/cachix-action@v17
   with:
     name: mycache
-    installCommand: nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install/1.11.1
+    cachixVersion: 1.14.0
 ```
+
+> [!NOTE]
+> On Intel Macs, the action installs Cachix 1.11.1 by default.
+> It is the last release with a prebuilt binary for that platform.
 
 ## Push modes
 

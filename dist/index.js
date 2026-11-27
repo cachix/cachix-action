@@ -22882,8 +22882,21 @@ var cachixArgs = getInput("cachixArgs");
 var skipAddingSubstituter = getBooleanInput("skipAddingSubstituter");
 var useDaemon = getBooleanInput("useDaemon");
 var cachixBinInput = getInput("cachixBin");
-var defaultCachixVersion = process.platform === "darwin" && process.arch === "x64" ? "1.11.1" : "1.15.0";
-var installCommand = getInput("installCommand") || `nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install/${defaultCachixVersion}`;
+var cachixVersionInput = getInput("cachixVersion");
+var installCommandInput = getInput("installCommand");
+var lastIntelMacCachixVersion = "1.11.1";
+async function defaultCachixVersionForPlatform() {
+  const isIntelMac = process.platform === "darwin" && process.arch === "x64";
+  if (isIntelMac) {
+    info(
+      `Using Cachix ${lastIntelMacCachixVersion}, the last release with a prebuilt binary for Intel macOS. Set cachixVersion to choose a different version.`
+    );
+    return lastIntelMacCachixVersion;
+  }
+  const versionFile = path4.join(__dirname, "..", "cachix-version.json");
+  const { version } = JSON.parse(await fs3.readFile(versionFile, "utf8"));
+  return version;
+}
 var ENV_CACHIX_DAEMON_DIR = "CACHIX_DAEMON_DIR";
 async function setup() {
   let cachixBin = cachixBinInput;
@@ -22896,6 +22909,8 @@ async function setup() {
       cachixBin = resolvedCachixBin;
     } else {
       startGroup("Cachix: installing");
+      const version = cachixVersionInput || await defaultCachixVersionForPlatform();
+      const installCommand = installCommandInput || `nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install/${version}`;
       await exec("bash", ["-c", installCommand]);
       cachixBin = import_which.default.sync("cachix");
       debug(`Installed Cachix executable: ${cachixBin}`);

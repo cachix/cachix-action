@@ -34,6 +34,19 @@ jobs:
           useDaemon: ${{ matrix.useDaemon }}
       - run: nix-build tests
 
+  intel-macos-default-version:
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v32
+        with:
+          install_url: ${{ inputs.install_url }}
+      - name: Test the Intel macOS default Cachix version
+        uses: ./
+        with:
+          name: cachix-action
+      - run: cachix --version | grep -F 1.11.1
+
   public-cache-no-signing-key:
     strategy:
       matrix:

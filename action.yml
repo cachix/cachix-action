@@ -33,6 +33,8 @@ inputs:
     default: "false"
   cachixArgs:
     description: "Additional command-line arguments to pass to Cachix commands. Defaults to -j8 for parallel processing"
+  cachixVersion:
+    description: "Version of the Cachix CLI to install. Defaults to 1.15.0, or 1.11.1 on Intel macOS"
   cachixBin:
     description: "Custom path to the Cachix binary if not using the default installation"
   installCommand:

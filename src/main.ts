@@ -21,12 +21,27 @@ const cachixArgs = core.getInput("cachixArgs");
 const skipAddingSubstituter = core.getBooleanInput("skipAddingSubstituter");
 const useDaemon = core.getBooleanInput("useDaemon");
 const cachixBinInput = core.getInput("cachixBin");
-// Cachix 1.11.1 is the last release with a prebuilt Intel macOS binary.
-const defaultCachixVersion =
-  process.platform === "darwin" && process.arch === "x64" ? "1.11.1" : "1.15.0";
-const installCommand =
-  core.getInput("installCommand") ||
-  `nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install/${defaultCachixVersion}`;
+const cachixVersionInput = core.getInput("cachixVersion");
+const installCommandInput = core.getInput("installCommand");
+
+const lastIntelMacCachixVersion = "1.11.1";
+
+async function defaultCachixVersionForPlatform(): Promise<string> {
+  const isIntelMac = process.platform === "darwin" && process.arch === "x64";
+  if (isIntelMac) {
+    core.info(
+      `Using Cachix ${lastIntelMacCachixVersion}, the last release with a prebuilt binary for Intel macOS. Set cachixVersion to choose a different version.`,
+    );
+    return lastIntelMacCachixVersion;
+  }
+
+  // Read at runtime, so that a version bump does not need a rebuild of dist.
+  const versionFile = path.join(__dirname, "..", "cachix-version.json");
+  const { version } = JSON.parse(await fs.readFile(versionFile, "utf8")) as {
+    version: string;
+  };
+  return version;
+}
 
 const ENV_CACHIX_DAEMON_DIR = "CACHIX_DAEMON_DIR";
 
@@ -61,6 +76,11 @@ async function setup() {
       cachixBin = resolvedCachixBin;
     } else {
       core.startGroup("Cachix: installing");
+      const version =
+        cachixVersionInput || (await defaultCachixVersionForPlatform());
+      const installCommand =
+        installCommandInput ||
+        `nix-env --quiet -j8 -iA cachix -f https://cachix.org/api/v1/install/${version}`;
       await exec.exec("bash", ["-c", installCommand]);
       cachixBin = which.sync("cachix");
       core.debug(`Installed Cachix executable: ${cachixBin}`);
